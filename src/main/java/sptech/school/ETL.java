@@ -66,9 +66,11 @@ public class ETL {
                 }
 
                 logger.info("Arquivo processado com sucesso: {}", arquivo);
+                inserirLogNoBanco("INFO", arquivo, "Processamento do arquivo", "Arquivo processado com sucesso");
 
             } catch (IOException | S3Exception e) {
                 logger.error("Erro ao processar o arquivo {}: {}", arquivo, e.getMessage());
+                inserirLogNoBanco("ERROR", arquivo, "Erro no processamento", e.getMessage());
                 logger.info("Continuando para o próximo arquivo...");
             }
         }
@@ -168,122 +170,139 @@ public class ETL {
 
     public List<Aeroporto> ExtrairDadosAeroporto(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de aeroportos do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Extraindo dados de aeroportos do arquivo: " + nomeArquivo);
         List<Aeroporto> aeroportosExtraidos = new ArrayList<>();
-        try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
-            Sheet sheet = arquivoExcel.getSheetAt(0); // Ajuste o índice da planilha conforme necessário
-            int limiteDeLinhas = 10;
 
-            // Encontrar a primeira ocorrência de "SBEG" na coluna C
+        try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
+            Sheet sheet = arquivoExcel.getSheetAt(0);
+            int limiteDeLinhas = 10;
             int startRow = -1;
-            for (int i = startRow; i <= sheet.getLastRowNum() && aeroportosExtraidos.size() < limiteDeLinhas; i++) {
+
+            // Encontre a primeira ocorrência de "SBEG" na coluna C
+            for (int i = 0; i <= sheet.getLastRowNum() && aeroportosExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
-                    Cell cellSigla = linha.getCell(2); // Coluna C (índice 2) para a sigla
-                    Cell cellClassificacao = linha.getCell(83); // Coluna D (índice 3) para a classificação
-                    if (cellSigla != null && cellSigla.getCellType() == CellType.STRING) {
-                        String sigla = cellSigla.getStringCellValue().trim();
-                        Integer classificacao = (cellClassificacao != null && cellClassificacao.getCellType() == CellType.NUMERIC)
-                                ? (int) cellClassificacao.getNumericCellValue()
-                                : null;
-                        try {
-                            Aeroporto aeroporto = new Aeroporto(sigla, classificacao);
-                            aeroportosExtraidos.add(aeroporto);
-                        } catch (IllegalArgumentException e) {
-                            logger.warn("Sigla ou classificação de aeroporto inválida ignorada: {}", sigla);
-                        }
+                    Cell cellSigla = linha.getCell(2);
+                    if (cellSigla != null && "SBEG".equals(cellSigla.getStringCellValue().trim())) {
+                        startRow = i;
+                        break;
                     }
                 }
             }
 
             // Se "SBEG" foi encontrado, começa a extração a partir de `startRow`
             if (startRow != -1) {
-                for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
+                for (int i = startRow; i <= sheet.getLastRowNum() && aeroportosExtraidos.size() < limiteDeLinhas; i++) {
                     Row linha = sheet.getRow(i);
                     if (linha != null) {
-                        Cell cellSigla = linha.getCell(2); // Coluna C (índice 2)
+                        Cell cellSigla = linha.getCell(2);
+                        Cell cellClassificacao = linha.getCell(83); // Coluna 83 para classificação
                         if (cellSigla != null && cellSigla.getCellType() == CellType.STRING) {
                             String sigla = cellSigla.getStringCellValue().trim();
+                            Integer classificacao = (cellClassificacao != null && cellClassificacao.getCellType() == CellType.NUMERIC)
+                                    ? (int) cellClassificacao.getNumericCellValue()
+                                    : null;
                             try {
-                                Aeroporto aeroporto = new Aeroporto(sigla);
+                                Aeroporto aeroporto = new Aeroporto(sigla, classificacao);
                                 aeroportosExtraidos.add(aeroporto);
+                                inserirLogNoBanco("INFO", nomeArquivo, "Aeroporto Extraído", "Sigla: " + sigla + ", Classificação: " + classificacao);
                             } catch (IllegalArgumentException e) {
-                                logger.warn("Sigla de aeroporto inválida ignorada: {}", sigla);
+                                logger.warn("Sigla ou classificação de aeroporto inválida ignorada: {}", sigla);
+                                inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados", "Sigla ou classificação inválida ignorada: " + sigla);
                             }
                         }
                     }
                 }
             } else {
                 logger.warn("Sigla 'SBEG' não encontrada na coluna C.");
+                inserirLogNoBanco("WARN", nomeArquivo, "Sigla Não Encontrada", "Sigla 'SBEG' não encontrada na coluna C.");
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
+
         logger.info("Dados de aeroportos extraídos com sucesso: {}", aeroportosExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Dados de aeroportos extraídos com sucesso: " + aeroportosExtraidos.size());
         return aeroportosExtraidos;
     }
 
     public List<Passageiro> extrairDadosPassageiro(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de passageiros do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de passageiros do arquivo: " + nomeArquivo);
         List<Passageiro> passageirosExtraidos = new ArrayList<>();
 
-        try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ?
-                new XSSFWorkbook(arquivo) :
-                new HSSFWorkbook(arquivo)) {
-
+        try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
             int limiteDeLinhas = 10;
 
             for (int i = 2; i <= sheet.getLastRowNum() && passageirosExtraidos.size() < limiteDeLinhas; i++) {
                 Row row = sheet.getRow(i);
                 if (row != null) {
-                    String nacionalidade = row.getCell(85).getStringCellValue();
-                    String genero = row.getCell(86).getStringCellValue();
-                    String faixaEtaria = row.getCell(87).getStringCellValue();
-                    String escolaridade = row.getCell(88).getStringCellValue();
-                    String rendaFamiliar = row.getCell(89).getStringCellValue();
+                    try {
+                        String nacionalidade = row.getCell(85).getStringCellValue();
+                        String genero = row.getCell(86).getStringCellValue();
+                        String faixaEtaria = row.getCell(87).getStringCellValue();
+                        String escolaridade = row.getCell(88).getStringCellValue();
+                        String rendaFamiliar = row.getCell(89).getStringCellValue();
 
-                    String viajandoSozinho = getCellValueAsString(row.getCell(90));
-                    String numeroAcompanhantes = getCellValueAsString(row.getCell(91));
-                    String motivoViagem = getCellValueAsString(row.getCell(92));
-                    String quantidadeViagensUltimos12Meses = getCellValueAsString(row.getCell(93));
-                    String jaEmbarcouDesembarcouAntes = getCellValueAsString(row.getCell(94));
-                    String antecedencia = getCellValueAsString(row.getCell(95));
-                    String tempoEspera = getCellValueAsString(row.getCell(96));
+                        String viajandoSozinho = getCellValueAsString(row.getCell(90));
+                        String numeroAcompanhantes = getCellValueAsString(row.getCell(91));
+                        String motivoViagem = getCellValueAsString(row.getCell(92));
+                        String quantidadeViagensUltimos12Meses = getCellValueAsString(row.getCell(93));
+                        String jaEmbarcouDesembarcouAntes = getCellValueAsString(row.getCell(94));
+                        String antecedencia = getCellValueAsString(row.getCell(95));
+                        String tempoEspera = getCellValueAsString(row.getCell(96));
 
-                    String comentariosAdicionais = null;
-                    Cell cell = row.getCell(97);
-                    if (cell != null) {
-                        switch (cell.getCellType()) {
-                            case STRING:
-                                comentariosAdicionais = cell.getStringCellValue();
-                                break;
-                            case FORMULA:
-                                comentariosAdicionais = cell.getStringCellValue();
-                                break;
-                            case NUMERIC:
-                                comentariosAdicionais = String.valueOf((int) cell.getNumericCellValue());
-                                break;
-                            default:
-                                break;
+                        String comentariosAdicionais = null;
+                        Cell cell = row.getCell(97);
+                        if (cell != null) {
+                            switch (cell.getCellType()) {
+                                case STRING:
+                                    comentariosAdicionais = cell.getStringCellValue();
+                                    break;
+                                case FORMULA:
+                                    comentariosAdicionais = cell.getStringCellValue();
+                                    break;
+                                case NUMERIC:
+                                    comentariosAdicionais = String.valueOf((int) cell.getNumericCellValue());
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
-                    }
 
-                    Passageiro passageiro = new Passageiro(nacionalidade, genero, faixaEtaria, escolaridade, rendaFamiliar,
-                            viajandoSozinho, numeroAcompanhantes, motivoViagem, quantidadeViagensUltimos12Meses,
-                            jaEmbarcouDesembarcouAntes, antecedencia, tempoEspera, comentariosAdicionais);
-                    passageirosExtraidos.add(passageiro);
+                        Passageiro passageiro = new Passageiro(nacionalidade, genero, faixaEtaria, escolaridade, rendaFamiliar,
+                                viajandoSozinho, numeroAcompanhantes, motivoViagem, quantidadeViagensUltimos12Meses,
+                                jaEmbarcouDesembarcouAntes, antecedencia, tempoEspera, comentariosAdicionais);
+                        passageirosExtraidos.add(passageiro);
+
+                        inserirLogNoBanco("INFO", nomeArquivo, "Passageiro Extraído",
+                                "Passageiro extraído: Nacionalidade=" + nacionalidade + ", Gênero=" + genero);
+                    } catch (Exception e) {
+                        logger.warn("Erro ao processar dados do passageiro na linha {}: {}", i, e.getMessage());
+                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados",
+                                "Erro ao processar dados do passageiro na linha " + i + ": " + e.getMessage());
+                    }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao extrair dados do arquivo", e);
+            logger.error("Erro ao extrair dados do arquivo: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo: " + e.getMessage());
             throw new RuntimeException("Erro ao extrair dados do arquivo: " + e.getMessage(), e);
         }
+
+        logger.info("Extração de passageiros concluída com sucesso: {}", passageirosExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
+                "Extração de passageiros concluída com sucesso. Total de passageiros extraídos: " + passageirosExtraidos.size());
+
         return passageirosExtraidos;
     }
 
     public List<PesquisaDeSatisfacao> extrairDadosPesquisaSatisfacao(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de pesquisas de satisfação do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de pesquisas de satisfação do arquivo: " + nomeArquivo);
         List<PesquisaDeSatisfacao> pesquisasExtraidas = new ArrayList<>();
         SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -295,25 +314,39 @@ public class ETL {
                 Row row = sheet.getRow(i);
 
                 if (row != null) {
-                    Integer pesquisaID = (int) row.getCell(0).getNumericCellValue(); // Coluna A
-                    String mes = row.getCell(4).getStringCellValue(); // Coluna E
-                    String data = formatoData.format(row.getCell(3).getDateCellValue()); // Coluna D
+                    try {
+                        Integer pesquisaID = (int) row.getCell(0).getNumericCellValue(); // Coluna A
+                        String mes = row.getCell(4).getStringCellValue(); // Coluna E
+                        String data = formatoData.format(row.getCell(3).getDateCellValue()); // Coluna D
 
-                    PesquisaDeSatisfacao pesquisa = new PesquisaDeSatisfacao(pesquisaID, null, null, mes, data);
-                    pesquisasExtraidas.add(pesquisa);
+                        PesquisaDeSatisfacao pesquisa = new PesquisaDeSatisfacao(pesquisaID, null, null, mes, data);
+                        pesquisasExtraidas.add(pesquisa);
+
+                        inserirLogNoBanco("INFO", nomeArquivo, "Pesquisa Extraída",
+                                "Pesquisa de satisfação extraída com ID=" + pesquisaID + ", Mês=" + mes);
+                    } catch (Exception e) {
+                        logger.warn("Erro ao processar dados da pesquisa de satisfação na linha {}: {}", i, e.getMessage());
+                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados",
+                                "Erro ao processar dados da pesquisa na linha " + i + ": " + e.getMessage());
+                    }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
-            throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo: " + e.getMessage());
+            throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage(), e);
         }
 
         logger.info("Dados de pesquisas de satisfação extraídos com sucesso: {}", pesquisasExtraidas.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
+                "Extração de pesquisas de satisfação concluída com sucesso. Total de pesquisas extraídas: " + pesquisasExtraidas.size());
+
         return pesquisasExtraidas;
     }
 
     public List<InformacoesVoo> extrairDadosInformacoesVoo(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de informações de voo do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de informações de voo do arquivo: " + nomeArquivo);
         List<InformacoesVoo> informacoesVoosExtraidas = new ArrayList<>();
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -323,28 +356,45 @@ public class ETL {
             for (int i = 2; i <= sheet.getLastRowNum() && informacoesVoosExtraidas.size() < limiteDeLinhas; i++) {
                 Row row = sheet.getRow(i);
                 if (row != null) {
-                    Integer pesquisaID = (int) row.getCell(0).getNumericCellValue();
-                    String processo = getCellValueAsString(row.getCell(1));
-                    String aeroporto = getCellValueAsString(row.getCell(2));
-                    String terminal = getCellValueAsString(row.getCell(7));
-                    String portao = getCellValueAsString(row.getCell(8));
-                    String tipoVoo = getCellValueAsString(row.getCell(9));
-                    String ciaAerea = getCellValueAsString(row.getCell(10));
-                    String voo = getCellValueAsString(row.getCell(11));
-                    String conexao = getCellValueAsString(row.getCell(12));
+                    try {
+                        Integer pesquisaID = (int) row.getCell(0).getNumericCellValue();
+                        String processo = getCellValueAsString(row.getCell(1));
+                        String aeroporto = getCellValueAsString(row.getCell(2));
+                        String terminal = getCellValueAsString(row.getCell(7));
+                        String portao = getCellValueAsString(row.getCell(8));
+                        String tipoVoo = getCellValueAsString(row.getCell(9));
+                        String ciaAerea = getCellValueAsString(row.getCell(10));
+                        String voo = getCellValueAsString(row.getCell(11));
+                        String conexao = getCellValueAsString(row.getCell(12));
 
-                    InformacoesVoo informacoesVoo = new InformacoesVoo(pesquisaID, processo, aeroporto, terminal, portao, tipoVoo, ciaAerea, voo, conexao);
-                    informacoesVoosExtraidas.add(informacoesVoo);
+                        InformacoesVoo informacoesVoo = new InformacoesVoo(pesquisaID, processo, aeroporto, terminal, portao, tipoVoo, ciaAerea, voo, conexao);
+                        informacoesVoosExtraidas.add(informacoesVoo);
+
+                        inserirLogNoBanco("INFO", nomeArquivo, "Informações de Voo Extraídas",
+                                "Informações do voo extraídas com ID=" + pesquisaID + ", Aeroporto=" + aeroporto + ", Voo=" + voo);
+                    } catch (Exception e) {
+                        logger.warn("Erro ao processar dados de voo na linha {}: {}", i, e.getMessage());
+                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados",
+                                "Erro ao processar dados de voo na linha " + i + ": " + e.getMessage());
+                    }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao extrair dados do arquivo", e);
+            logger.error("Erro ao extrair dados do arquivo: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao extrair dados do arquivo: " + e.getMessage());
         }
+
+        logger.info("Dados de informações de voo extraídos com sucesso: {}", informacoesVoosExtraidas.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
+                "Extração de informações de voo concluída com sucesso. Total de informações extraídas: " + informacoesVoosExtraidas.size());
+
         return informacoesVoosExtraidas;
     }
 
     public List<AquisicaoPassagem> extrairDadosAquisicaoPassagem(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de aquisições de passagem do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de aquisições de passagem do arquivo: " + nomeArquivo);
+
         List<AquisicaoPassagem> aquisicoesExtraidas = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -366,20 +416,30 @@ public class ETL {
                         // Cria a AquisicaoPassagem independentemente de campos nulos
                         AquisicaoPassagem aquisicao = new AquisicaoPassagem(pesquisaID, aquisicaoPassagem, meioAquisicaoPassagem, meioTransporteAeroporto);
                         aquisicoesExtraidas.add(aquisicao);
+
+                        // Log de sucesso para cada aquisição de passagem extraída
+                        inserirLogNoBanco("INFO", nomeArquivo, "Aquisicao de Passagem Extraída",
+                                "Aquisicao de passagem extraída com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de aquisições de passagem extraídos com sucesso: {}", aquisicoesExtraidas.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
+                "Extração de aquisições de passagem concluída com sucesso. Total de aquisições extraídas: " + aquisicoesExtraidas.size());
+
         return aquisicoesExtraidas;
     }
 
-    public List<NecessidadesEspeciais> extrairDadosNecessidadesEspeciais(String nomeArquivo, InputStream arquivo){
-        logger.info("Extraindo dados de NecessidadesEspeciais do arquivo: {}", nomeArquivo);
+    public List<NecessidadesEspeciais> extrairDadosNecessidadesEspeciais(String nomeArquivo, InputStream arquivo) {
+        logger.info("Extraindo dados de Necessidades Especiais do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de necessidades especiais do arquivo: " + nomeArquivo);
+
         List<NecessidadesEspeciais> necessidadesEspeciaisExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -398,22 +458,33 @@ public class ETL {
                         String utilizaRecursoAssistivo = getCellValueAsString(linha.getCell(17));
                         String solicitouAssistenciaEspecial = getCellValueAsString(linha.getCell(18));
 
-                        // Cria a CheckIn independentemente de campos nulos
+                        // Cria a NecessidadesEspeciais independentemente de campos nulos
                         NecessidadesEspeciais necessidadesEspeciais = new NecessidadesEspeciais(pesquisaID, possuiDeficiencia, utilizaRecursoAssistivo, solicitouAssistenciaEspecial);
                         necessidadesEspeciaisExtraidos.add(necessidadesEspeciais);
+
+                        // Log de sucesso para cada necessidade especial extraída
+                        inserirLogNoBanco("INFO", nomeArquivo, "Necessidade Especial Extraída",
+                                "Necessidade especial extraída com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
-        logger.info("Dados de NecessidadesEspeciais extraídos com sucesso: {}", necessidadesEspeciaisExtraidos.size());
+
+        logger.info("Dados de Necessidades Especiais extraídos com sucesso: {}", necessidadesEspeciaisExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
+                "Extração de necessidades especiais concluída com sucesso. Total de necessidades extraídas: " + necessidadesEspeciaisExtraidos.size());
+
         return necessidadesEspeciaisExtraidos;
     }
 
-    public List<Desembarque> extrairDadosDesembarque(String nomeArquivo, InputStream arquivo){
+    public List<Desembarque> extrairDadosDesembarque(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de Desembarque do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de desembarque do arquivo: " + nomeArquivo);
+
         List<Desembarque> desembarquesExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -434,22 +505,33 @@ public class ETL {
                         Integer facilidadeDesembarqueMeioFio = getNumericCellValue(linha.getCell(22));
                         Integer opcoesTransporteAeroporto = getNumericCellValue(linha.getCell(23));
 
-                        // Cria a CheckIn independentemente de campos nulos
+                        // Cria a Desembarque independentemente de campos nulos
                         Desembarque desembarque = new Desembarque(pesquisaID, formaDesembarque, avaliacaoMetodoDesembarque, utilizouEstacionamento, facilidadeDesembarqueMeioFio, opcoesTransporteAeroporto);
                         desembarquesExtraidos.add(desembarque);
+
+                        // Log de sucesso para cada desembarque extraído
+                        inserirLogNoBanco("INFO", nomeArquivo, "Desembarque Extraído",
+                                "Desembarque extraído com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
+
         logger.info("Dados de Desembarque extraídos com sucesso: {}", desembarquesExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
+                "Extração de desembarques concluída com sucesso. Total de desembarques extraídos: " + desembarquesExtraidos.size());
+
         return desembarquesExtraidos;
     }
 
     public List<CheckIn> ExtrairDadosCheckIn(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de check-in do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de check-in do arquivo: " + nomeArquivo);
+
         List<CheckIn> checkInsExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -478,20 +560,30 @@ public class ETL {
                         CheckIn checkIn = new CheckIn(pesquisaID, formaCheckIn, processoCheckIn, tempoEsperaFila, organizacaoFilas,
                                 quantidadeTotensAA, quantidadeBalcoes, cordialidadeFuncionarios, tempoAtendimento);
                         checkInsExtraidos.add(checkIn);
+
+                        // Log de sucesso para cada check-in extraído
+                        inserirLogNoBanco("INFO", nomeArquivo, "Check-in Extraído",
+                                "Check-in extraído com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de check-in extraídos com sucesso: {}", checkInsExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
+                "Extração de check-ins concluída com sucesso. Total de check-ins extraídos: " + checkInsExtraidos.size());
+
         return checkInsExtraidos;
     }
 
-    public List<InspecaoSeguranca> extrairDadosInspecaoSeguranca(String nomeArquivo, InputStream arquivo){
+    public List<InspecaoSeguranca> extrairDadosInspecaoSeguranca(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de InspecaoSeguranca do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de InspecaoSeguranca do arquivo: " + nomeArquivo);
+
         List<InspecaoSeguranca> inspecaoSegurancasExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -512,24 +604,33 @@ public class ETL {
                         Integer organizacaoFilas = getNumericCellValue(linha.getCell(36));
                         Integer atendimentoFuncionarios = getNumericCellValue(linha.getCell(37));
 
-
-                        // Cria a CheckIn independentemente de campos nulos
+                        // Cria a InspecaoSeguranca independentemente de campos nulos
                         InspecaoSeguranca inspecaoSeguranca = new InspecaoSeguranca(pesquisaID, processoInspecaoSeguranca, tempoEsperaFila, organizacaoFilas, atendimentoFuncionarios);
                         inspecaoSegurancasExtraidos.add(inspecaoSeguranca);
+
+                        // Log de sucesso para cada InspecaoSeguranca extraída
+                        inserirLogNoBanco("INFO", nomeArquivo, "Inspeção de Segurança Extraída",
+                                "Inspeção de segurança extraída com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de InspecaoSeguranca extraídos com sucesso: {}", inspecaoSegurancasExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
+                "Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: " + inspecaoSegurancasExtraidos.size());
+
         return inspecaoSegurancasExtraidos;
     }
 
-    public List<ControleMigratorioAduaneiro> extrairDadosControleMigratorioAduaneiro(String nomeArquivo, InputStream arquivo){
+    public List<ControleMigratorioAduaneiro> extrairDadosControleMigratorioAduaneiro(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de ControleMigratorioAduaneiro do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: " + nomeArquivo);
+
         List<ControleMigratorioAduaneiro> controleMigratorioAduaneirosExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -552,23 +653,33 @@ public class ETL {
                         Integer quantidadeGuiches = getNumericCellValue(linha.getCell(42));
                         String controleAduaneiro = getCellValueAsString(linha.getCell(43));
 
-                        // Cria a CheckIn independentemente de campos nulos
+                        // Cria o ControleMigratorioAduaneiro independentemente de campos nulos
                         ControleMigratorioAduaneiro controleMigratorioAduaneiro = new ControleMigratorioAduaneiro(pesquisaID, controleMigratorio, tempoEsperaFila, organizacaoFilas, atendimentoFuncionarios, quantidadeGuiches, controleAduaneiro);
                         controleMigratorioAduaneirosExtraidos.add(controleMigratorioAduaneiro);
+
+                        // Log de sucesso para cada ControleMigratorioAduaneiro extraído
+                        inserirLogNoBanco("INFO", nomeArquivo, "Controle Migratório Aduaneiro Extraído",
+                                "Controle migratório aduaneiro extraído com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de ControleMigratorioAduaneiro extraídos com sucesso: {}", controleMigratorioAduaneirosExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
+                "Extração de ControleMigratorioAduaneiro concluída com sucesso. Total de controles extraídos: " + controleMigratorioAduaneirosExtraidos.size());
+
         return controleMigratorioAduaneirosExtraidos;
     }
 
-    public List<Estabelecimentos> extrairDadosEstabelecimentos(String nomeArquivo, InputStream arquivo){
+    public List<Estabelecimentos> extrairDadosEstabelecimentos(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de Estabelecimentos do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de Estabelecimentos do arquivo: " + nomeArquivo);
+
         List<Estabelecimentos> estabelecimentosExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -588,28 +699,35 @@ public class ETL {
                         Integer quantidadeEstabelecimentosAlimentacao = getNumericCellValue(linha.getCell(48));
                         Integer qualidadeVariedadeOpcoesAlimentacao = getNumericCellValue(linha.getCell(49));
                         Integer relacaoPrecoQualidadeAlimentacao = getNumericCellValue(linha.getCell(50));
-                        String estabelecimentosComerciais = getCellValueAsStringg(linha.getCell(51));
+                        String estabelecimentosComerciais = getCellValueAsString(linha.getCell(51));
                         Integer quantidadeEstabelecimentosComerciais = getNumericCellValue(linha.getCell(52));
                         Integer qualidadeVariedadeOpcoesComerciais = getNumericCellValue(linha.getCell(53));
 
-
-                        // Cria a CheckIn independentemente de campos nulos
+                        // Cria o Estabelecimentos independentemente de campos nulos
                         Estabelecimentos estabelecimentos = new Estabelecimentos(pesquisaID, estabelecimentosAlimentacao, quantidadeEstabelecimentosAlimentacao, qualidadeVariedadeOpcoesAlimentacao, relacaoPrecoQualidadeAlimentacao, estabelecimentosComerciais, quantidadeEstabelecimentosComerciais, qualidadeVariedadeOpcoesComerciais);
                         estabelecimentosExtraidos.add(estabelecimentos);
+
+                        // Log de sucesso para cada Estabelecimentos extraído
+                        inserirLogNoBanco("INFO", nomeArquivo, "Estabelecimento Extraído", "Estabelecimento extraído com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de Estabelecimentos extraídos com sucesso: {}", estabelecimentosExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Estabelecimentos concluída com sucesso. Total de estabelecimentos extraídos: " + estabelecimentosExtraidos.size());
+
         return estabelecimentosExtraidos;
     }
 
-    public List<Estacionamento> extrairDadosEstacionamento(String nomeArquivo, InputStream arquivo){
+    public List<Estacionamento> extrairDadosEstacionamento(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de Estacionamento do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de Estacionamento do arquivo: " + nomeArquivo);
+
         List<Estacionamento> estacionamentoExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -630,24 +748,31 @@ public class ETL {
                         Integer facilidadeAcessoTerminal = getNumericCellValue(linha.getCell(58));
                         Integer relacaoCustoBeneficio = getNumericCellValue(linha.getCell(59));
 
-
-                        // Cria a CheckIn independentemente de campos nulos
+                        // Cria o Estacionamento independentemente de campos nulos
                         Estacionamento estacionamento = new Estacionamento(pesquisaID, qualidadeInstalacoesEstacionamento, facilidadeEncontrarVagas, facilidadeAcessoTerminal, relacaoCustoBeneficio);
                         estacionamentoExtraidos.add(estacionamento);
+
+                        // Log de sucesso para cada Estacionamento extraído
+                        inserirLogNoBanco("INFO", nomeArquivo, "Estacionamento Extraído", "Estacionamento extraído com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de Estacionamento extraídos com sucesso: {}", estacionamentoExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Estacionamento concluída com sucesso. Total de estacionamentos extraídos: " + estacionamentoExtraidos.size());
+
         return estacionamentoExtraidos;
     }
 
-    public List<ConfortoAcessibilidade> extrairConfortoAcessibilidade(String nomeArquivo, InputStream arquivo){
+    public List<ConfortoAcessibilidade> extrairConfortoAcessibilidade(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de ConfortoAcessibilidade do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de ConfortoAcessibilidade do arquivo: " + nomeArquivo);
+
         List<ConfortoAcessibilidade> confortoAcessibilidadesExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -677,24 +802,38 @@ public class ETL {
                         Integer velocidadeConexao = getNumericCellValue(linha.getCell(71));
                         Integer facilidadeAcessoRede = getNumericCellValue(linha.getCell(72));
 
-
-                        // Cria a CheckIn independentemente de campos nulos
-                        ConfortoAcessibilidade confortoAcessibilidade = new ConfortoAcessibilidade(pesquisaID, localizacaoDeslocamento, sinalizacao, disponibilidadePaineisInformacoesVoo, acessibilidadeTerminal, confortoSalaEmbarque, confortoTermico, confortoAcustico,disponibilidadeAssentos, disponibilidadeAssentosReservados, disponibilidadeTomadas, internetDisponibilizadaAeroporto, velocidadeConexao, facilidadeAcessoRede);
+                        // Cria a ConfortoAcessibilidade independentemente de campos nulos
+                        ConfortoAcessibilidade confortoAcessibilidade = new ConfortoAcessibilidade(
+                                pesquisaID, localizacaoDeslocamento, sinalizacao,
+                                disponibilidadePaineisInformacoesVoo, acessibilidadeTerminal,
+                                confortoSalaEmbarque, confortoTermico, confortoAcustico,
+                                disponibilidadeAssentos, disponibilidadeAssentosReservados,
+                                disponibilidadeTomadas, internetDisponibilizadaAeroporto,
+                                velocidadeConexao, facilidadeAcessoRede
+                        );
                         confortoAcessibilidadesExtraidos.add(confortoAcessibilidade);
+
+                        // Log de sucesso para cada ConfortoAcessibilidade extraído
+                        inserirLogNoBanco("INFO", nomeArquivo, "ConfortoAcessibilidade Extraído", "ConfortoAcessibilidade extraído com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de ConfortoAcessibilidade extraídos com sucesso: {}", confortoAcessibilidadesExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de ConfortoAcessibilidade concluída com sucesso. Total de confortos acessibilidade extraídos: " + confortoAcessibilidadesExtraidos.size());
+
         return confortoAcessibilidadesExtraidos;
     }
 
-    public List<Sanitarios> extrairDadosSanitarios(String nomeArquivo, InputStream arquivo){
+    public List<Sanitarios> extrairDadosSanitarios(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de Sanitarios do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de Sanitarios do arquivo: " + nomeArquivo);
+
         List<Sanitarios> sanitariosExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -718,20 +857,28 @@ public class ETL {
 
                         Sanitarios sanitarios = new Sanitarios(pesquisaID, sanitariosQt, quantidadeBanheiros, limpezaBanheiros, manutencaoGeralSanitarios, limpezaGeralAeroporto);
                         sanitariosExtraidos.add(sanitarios);
+
+                        // Log de sucesso para cada Sanitarios extraído
+                        inserirLogNoBanco("INFO", nomeArquivo, "Sanitarios Extraído", "Sanitarios extraído com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de Sanitarios extraídos com sucesso: {}", sanitariosExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Sanitarios concluída com sucesso. Total de sanitários extraídos: " + sanitariosExtraidos.size());
+
         return sanitariosExtraidos;
     }
 
-    public List<RestituicaoBagagens> extrairDadosBagagens(String nomeArquivo, InputStream arquivo){
+    public List<RestituicaoBagagens> extrairDadosBagagens(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de RestituicaoBagagens do arquivo: {}", nomeArquivo);
+        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de RestituicaoBagagens do arquivo: " + nomeArquivo);
+
         List<RestituicaoBagagens> restituicaoBagagensExtraidos = new ArrayList<>();
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -755,15 +902,21 @@ public class ETL {
 
                         RestituicaoBagagens restituicaoBagagens = new RestituicaoBagagens(pesquisaID, processoRestituicaoBagagens, facilidadeIdentificacaoEsteira, tempoRestituicao, integridadeBagagem, atendimentoCiaAerea);
                         restituicaoBagagensExtraidos.add(restituicaoBagagens);
+
+                        // Log de sucesso para cada RestituicaoBagagens extraído
+                        inserirLogNoBanco("INFO", nomeArquivo, "RestituicaoBagagens Extraído", "RestituicaoBagagens extraído com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de RestituicaoBagagens extraídos com sucesso: {}", restituicaoBagagensExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de RestituicaoBagagens concluída com sucesso. Total de RestituicaoBagagens extraídos: " + restituicaoBagagensExtraidos.size());
+
         return restituicaoBagagensExtraidos;
     }
 
@@ -1508,4 +1661,14 @@ public class ETL {
             throw new RuntimeException("Erro ao inserir dados de restituição de bagagens no banco de dados: " + e.getMessage(), e);
         }
     }
+
+    public void inserirLogNoBanco(String status, String arquivoLido, String titulo, String descricao) {
+        ConexBanco conectar = new ConexBanco();
+        JdbcTemplate conec = conectar.getConexaoBanco();
+
+        String sql = "INSERT INTO log (status, arquivo_lido, titulo, descricao) VALUES (?, ?, ?, ?)";
+
+        conec.update(sql, status, arquivoLido, titulo, descricao);
+    }
+
 }

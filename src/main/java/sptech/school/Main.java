@@ -12,7 +12,6 @@ public class Main {
 
     public static void main(String[] args) {
         logger.info("Iniciando o processo de ETL...");
-
         ETL etlAevus = new ETL();
 
         S3Client conexS3 = new S3Provider().getS3Client();
