@@ -26,11 +26,7 @@ public class ETL {
     private static final Logger logger = LoggerFactory.getLogger(ETL.class);
     private static final String BUCKET_NAME = "s3-bucket-aevusec2";
 
-    public void processarArquivosS3(List<String> arquivos) {
-        S3Client conexS3 = S3Client.builder()
-                .region(Region.US_EAST_1)
-                .credentialsProvider(DefaultCredentialsProvider.create())
-                .build();
+    public void processarArquivosS3(List<String> arquivos, S3Client conexS3) {
 
         for (String arquivo : arquivos) {
             try {
