@@ -10,7 +10,7 @@ public class ConexBanco {
         BasicDataSource configBanco = new BasicDataSource();
 
         // Configurações da conexão com MySQL
-        configBanco.setUrl("jdbc:mysql://98.81.139.151:3306/aevus2"); // Altere para o seu IP e nome do banco
+        configBanco.setUrl("jdbc:mysql://3.90.235.135/aevus"); // Altere para o seu IP e nome do banco
         configBanco.setUsername("devaevus"); // Altere para o seu nome de usuário
         configBanco.setPassword("aevus123"); // Altere para a sua senha
 
