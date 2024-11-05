@@ -131,7 +131,6 @@ public class ETL {
         }
     }
 
-
     // Método auxiliar para obter o valor BOOLEAN da célula
     private String getBooleanValueFromCell(Cell cell) {
         if (cell != null) {
@@ -154,6 +153,11 @@ public class ETL {
         return null; // Se a célula for nula, retorna null
     }
 
+    private Integer getCellValueAsInteger(Cell cell) {
+        if (cell == null || cell.getCellType() != CellType.NUMERIC) return null;
+        return (int) cell.getNumericCellValue();
+    }
+
     private String getVooAsStringOrInteger(Cell cell) {
         if (cell == null) {
             return null;
@@ -168,54 +172,41 @@ public class ETL {
         }
     }
 
+    private int determinarLinhaInicial(String nomeArquivo) {
+        if (nomeArquivo.startsWith("2024")) {
+            return 3; // Inicia na linha 4 (índice 3)
+        } else {
+            return 2; // Inicia na linha 3 (índice 2)
+        }
+    }
+
     public List<Aeroporto> ExtrairDadosAeroporto(String nomeArquivo, InputStream arquivo) {
         logger.info("Extraindo dados de aeroportos do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Extraindo dados de aeroportos do arquivo: " + nomeArquivo);
         List<Aeroporto> aeroportosExtraidos = new ArrayList<>();
 
-        try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
-            Sheet sheet = arquivoExcel.getSheetAt(0);
+        try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
+            Sheet sheet = workbook.getSheetAt(0);
             int limiteDeLinhas = 10;
-            int startRow = -1;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            // Encontre a primeira ocorrência de "SBEG" na coluna C
-            for (int i = 0; i <= sheet.getLastRowNum() && aeroportosExtraidos.size() < limiteDeLinhas; i++) {
-                Row linha = sheet.getRow(i);
-                if (linha != null) {
-                    Cell cellSigla = linha.getCell(2);
-                    if (cellSigla != null && "SBEG".equals(cellSigla.getStringCellValue().trim())) {
-                        startRow = i;
-                        break;
-                    }
-                }
-            }
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && aeroportosExtraidos.size() < limiteDeLinhas; i++) {
+                Row row = sheet.getRow(i);
+                if (row != null) {
+                    try {
+                        String sigla = getCellValueAsString(row.getCell(2));  // Coluna da sigla
+                        Integer classificacao = getCellValueAsInteger(row.getCell(83));  // Coluna da classificação
 
-            // Se "SBEG" foi encontrado, começa a extração a partir de `startRow`
-            if (startRow != -1) {
-                for (int i = startRow; i <= sheet.getLastRowNum() && aeroportosExtraidos.size() < limiteDeLinhas; i++) {
-                    Row linha = sheet.getRow(i);
-                    if (linha != null) {
-                        Cell cellSigla = linha.getCell(2);
-                        Cell cellClassificacao = linha.getCell(83); // Coluna 83 para classificação
-                        if (cellSigla != null && cellSigla.getCellType() == CellType.STRING) {
-                            String sigla = cellSigla.getStringCellValue().trim();
-                            Integer classificacao = (cellClassificacao != null && cellClassificacao.getCellType() == CellType.NUMERIC)
-                                    ? (int) cellClassificacao.getNumericCellValue()
-                                    : null;
-                            try {
-                                Aeroporto aeroporto = new Aeroporto(sigla, classificacao);
-                                aeroportosExtraidos.add(aeroporto);
-                                inserirLogNoBanco("INFO", nomeArquivo, "Aeroporto Extraído", "Sigla: " + sigla + ", Classificação: " + classificacao);
-                            } catch (IllegalArgumentException e) {
-                                logger.warn("Sigla ou classificação de aeroporto inválida ignorada: {}", sigla);
-                                inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados", "Sigla ou classificação inválida ignorada: " + sigla);
-                            }
+                        if (sigla != null && !sigla.isEmpty()) {
+                            Aeroporto aeroporto = new Aeroporto(sigla, classificacao);
+                            aeroportosExtraidos.add(aeroporto);
+                            inserirLogNoBanco("INFO", nomeArquivo, "Aeroporto Extraído", "Sigla: " + sigla + ", Classificação: " + classificacao);
                         }
+                    } catch (Exception e) {
+                        logger.warn("Erro ao processar dados do aeroporto na linha {}: {}", i, e.getMessage());
+                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados", "Erro ao processar dados do aeroporto na linha " + i + ": " + e.getMessage());
                     }
                 }
-            } else {
-                logger.warn("Sigla 'SBEG' não encontrada na coluna C.");
-                inserirLogNoBanco("WARN", nomeArquivo, "Sigla Não Encontrada", "Sigla 'SBEG' não encontrada na coluna C.");
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
@@ -236,8 +227,9 @@ public class ETL {
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && passageirosExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && passageirosExtraidos.size() < limiteDeLinhas; i++) {
                 Row row = sheet.getRow(i);
                 if (row != null) {
                     try {
@@ -309,8 +301,9 @@ public class ETL {
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && pesquisasExtraidas.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && pesquisasExtraidas.size() < limiteDeLinhas; i++) {
                 Row row = sheet.getRow(i);
 
                 if (row != null) {
@@ -352,8 +345,9 @@ public class ETL {
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && informacoesVoosExtraidas.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && informacoesVoosExtraidas.size() < limiteDeLinhas; i++) {
                 Row row = sheet.getRow(i);
                 if (row != null) {
                     try {
@@ -400,8 +394,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0); // Altere o índice se necessário
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && aquisicoesExtraidas.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && aquisicoesExtraidas.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     Cell cellPesquisaID = linha.getCell(0); // Supondo que a coluna 0 é Pesquisa_ID
@@ -445,8 +440,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && necessidadesEspeciaisExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && necessidadesEspeciaisExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     Cell cellPesquisaID = linha.getCell(0);
@@ -490,8 +486,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && desembarquesExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && desembarquesExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     Cell cellPesquisaID = linha.getCell(0);
@@ -537,8 +534,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && checkInsExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && checkInsExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     // Supondo que a coluna 0 é onde está o pesquisaID
@@ -589,8 +587,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && inspecaoSegurancasExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && inspecaoSegurancasExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     // Supondo que a coluna 0 é onde está o pesquisaID
@@ -636,8 +635,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && controleMigratorioAduaneirosExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && controleMigratorioAduaneirosExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     // Supondo que a coluna 0 é onde está o pesquisaID
@@ -685,8 +685,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && estabelecimentosExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && estabelecimentosExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     // Supondo que a coluna 0 é onde está o pesquisaID
@@ -733,8 +734,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && estacionamentoExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && estacionamentoExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     // Supondo que a coluna 0 é onde está o pesquisaID
@@ -778,8 +780,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && confortoAcessibilidadesExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && confortoAcessibilidadesExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     // Supondo que a coluna 0 é onde está o pesquisaID
@@ -839,8 +842,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && sanitariosExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && sanitariosExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     // Supondo que a coluna 0 é onde está o pesquisaID
@@ -884,8 +888,9 @@ public class ETL {
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
             int limiteDeLinhas = 10;
+            int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
-            for (int i = 2; i <= sheet.getLastRowNum() && restituicaoBagagensExtraidos.size() < limiteDeLinhas; i++) {
+            for (int i = linhaInicial; i <= sheet.getLastRowNum() && restituicaoBagagensExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
                     // Supondo que a coluna 0 é onde está o pesquisaID
