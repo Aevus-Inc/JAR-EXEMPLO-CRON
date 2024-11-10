@@ -1,7 +1,6 @@
 package sptech.school;
 
-public class ControleMigratorioAduaneiro {
-    private Integer pesquisaID;
+public class ControleMigratorioAduaneiro extends PesquisaDeSatisfacao{
     private Integer controleMigratorio;
     private Integer tempoEsperaFila;
     private Integer organizacaoFilas;
@@ -14,21 +13,13 @@ public class ControleMigratorioAduaneiro {
     }
 
     public ControleMigratorioAduaneiro(Integer pesquisaID, Integer controleMigratorio, Integer tempoEsperaFila, Integer organizacaoFilas, Integer atendimentoFuncionarios, Integer quantidadeGuiches, String controleAduaneiro) {
-        this.pesquisaID = pesquisaID;
+        super(pesquisaID);
         this.controleMigratorio = controleMigratorio;
         this.tempoEsperaFila = tempoEsperaFila;
         this.organizacaoFilas = organizacaoFilas;
         this.atendimentoFuncionarios = atendimentoFuncionarios;
         this.quantidadeGuiches = quantidadeGuiches;
         this.controleAduaneiro = controleAduaneiro;
-    }
-
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
     }
 
     public Integer getControleMigratorio() {

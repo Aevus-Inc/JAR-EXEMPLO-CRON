@@ -17,9 +17,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class ETL {
@@ -40,9 +38,8 @@ public class ETL {
                 }
 
                 List<Consumer<InputStream>> processos = Arrays.asList(
-
-                        stream -> inserirPassageirosNoBanco(extrairDadosPassageiro(arquivo, stream)),
                         stream -> InserirAeroportosNoBanco(ExtrairDadosAeroporto(arquivo, stream)),
+                        stream -> inserirPassageirosNoBanco(extrairDadosPassageiro(arquivo, stream)),
                         stream -> inserirPesquisasNoBanco(extrairDadosPesquisaSatisfacao(arquivo, stream)),
                         stream -> inserirInformacoesVooNoBanco(extrairDadosInformacoesVoo(arquivo, stream)),
                         stream -> InserirPassagemNoBanco(extrairDadosAquisicaoPassagem(arquivo, stream)),
@@ -169,6 +166,18 @@ public class ETL {
                 return String.valueOf((int) cell.getNumericCellValue()); // Converte para String e remove decimais
             default:
                 return null;
+        }
+    }
+
+    public Integer obterAeroportoIdPorSigla(String sigla) {
+        String sql = "SELECT idAeroporto FROM Aeroporto WHERE UPPER(siglaAeroporto) = UPPER(?)";
+        JdbcTemplate jdbcTemplate = new ConexBanco().getConexaoBanco();
+        logger.info("Consultando idAeroporto para a sigla: {}", sigla);
+        try {
+            return jdbcTemplate.queryForObject(sql, Integer.class, sigla);
+        } catch (Exception e) {
+            logger.warn("Aeroporto com sigla {} não encontrado.", sigla);
+            return null;  // Retorna null se não encontrar
         }
     }
 
@@ -309,14 +318,17 @@ public class ETL {
                 if (row != null) {
                     try {
                         Integer pesquisaID = (int) row.getCell(0).getNumericCellValue(); // Coluna A
-                        String mes = row.getCell(4).getStringCellValue(); // Coluna E
+                        String siglaAeroporto = row.getCell(2).getStringCellValue();     // Coluna B
+                        String mes = row.getCell(4).getStringCellValue();                // Coluna E
                         String data = formatoData.format(row.getCell(3).getDateCellValue()); // Coluna D
 
-                        PesquisaDeSatisfacao pesquisa = new PesquisaDeSatisfacao(pesquisaID, null, null, mes, data);
+                        Integer aeroportoId = obterAeroportoIdPorSigla(siglaAeroporto); // Obtém ID pelo método
+
+                        PesquisaDeSatisfacao pesquisa = new PesquisaDeSatisfacao(pesquisaID, null, aeroportoId, mes, data);
                         pesquisasExtraidas.add(pesquisa);
 
                         inserirLogNoBanco("INFO", nomeArquivo, "Pesquisa Extraída",
-                                "Pesquisa de satisfação extraída com ID=" + pesquisaID + ", Mês=" + mes);
+                                "Pesquisa de satisfação extraída com ID=" + pesquisaID + ", Sigla Aeroporto=" + siglaAeroporto);
                     } catch (Exception e) {
                         logger.warn("Erro ao processar dados da pesquisa de satisfação na linha {}: {}", i, e.getMessage());
                         inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados",
@@ -353,7 +365,7 @@ public class ETL {
                     try {
                         Integer pesquisaID = (int) row.getCell(0).getNumericCellValue();
                         String processo = getCellValueAsString(row.getCell(1));
-                        String aeroporto = getCellValueAsString(row.getCell(2));
+                        String aeroportoVoo = getCellValueAsString(row.getCell(2));
                         String terminal = getCellValueAsString(row.getCell(7));
                         String portao = getCellValueAsString(row.getCell(8));
                         String tipoVoo = getCellValueAsString(row.getCell(9));
@@ -361,11 +373,11 @@ public class ETL {
                         String voo = getCellValueAsString(row.getCell(11));
                         String conexao = getCellValueAsString(row.getCell(12));
 
-                        InformacoesVoo informacoesVoo = new InformacoesVoo(pesquisaID, processo, aeroporto, terminal, portao, tipoVoo, ciaAerea, voo, conexao);
+                        InformacoesVoo informacoesVoo = new InformacoesVoo(pesquisaID, processo, aeroportoVoo, terminal, portao, tipoVoo, ciaAerea, voo, conexao);
                         informacoesVoosExtraidas.add(informacoesVoo);
 
                         inserirLogNoBanco("INFO", nomeArquivo, "Informações de Voo Extraídas",
-                                "Informações do voo extraídas com ID=" + pesquisaID + ", Aeroporto=" + aeroporto + ", Voo=" + voo);
+                                "Informações do voo extraídas com ID=" + pesquisaID + ", Aeroporto=" + aeroportoVoo + ", Voo=" + voo);
                     } catch (Exception e) {
                         logger.warn("Erro ao processar dados de voo na linha {}: {}", i, e.getMessage());
                         inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados",
@@ -932,37 +944,42 @@ public class ETL {
         ConexBanco conectar = new ConexBanco();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
-        // Modificando a consulta SQL para usar STR_TO_DATE
-        String sql = "INSERT IGNORE INTO PesquisaDeSatisfacao (Pesquisa_ID, Mes, DataPesquisa) VALUES (?, ?, STR_TO_DATE(?, '%d/%m/%Y'))";
+        String sql = "INSERT IGNORE INTO PesquisaDeSatisfacao (Pesquisa_ID, Passageiro_ID, Aeroporto_idAeroporto, Mes, DataPesquisa) VALUES (?, ?, ?, ?, STR_TO_DATE(?, '%d/%m/%Y'))";
 
-        int batchSize = 2000; // Ajuste o tamanho do lote conforme necessário
+        int batchSize = 2000;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
         try {
             for (PesquisaDeSatisfacao pesquisa : pesquisas) {
+                if (pesquisa.getaeroportoId() == null || pesquisa.getData() == null || pesquisa.getData().isEmpty()) {
+                    logger.warn("Pesquisa de ID {} não tem aeroportoId ou DataPesquisa e será ignorada.", pesquisa.getPesquisaID());
+                    continue;
+                }
+
                 Object[] parametros = {
                         pesquisa.getPesquisaID(),
+                        null, // Supondo que Passageiro_ID não está sendo usado
+                        pesquisa.getaeroportoId(),
                         pesquisa.getMes(),
-                        pesquisa.getData() // Data no formato DD/MM/YYYY
+                        pesquisa.getData()
                 };
 
-                // Log dos dados que estão sendo inseridos
-                logger.info("Inserindo: Pesquisa_ID={}, Mes={}, DataPesquisa={}",
+                logger.info("Inserindo: Pesquisa_ID={}, Aeroporto_idAeroporto={}, Mes={}, DataPesquisa={}",
                         pesquisa.getPesquisaID(),
+                        pesquisa.getaeroportoId(),
                         pesquisa.getMes(),
                         pesquisa.getData());
 
                 parametrosBatch.add(parametros);
 
                 if (++count % batchSize == 0) {
-                    conec.batchUpdate(sql, parametrosBatch); // Insere lote
+                    conec.batchUpdate(sql, parametrosBatch);
                     logger.info("Inserido lote de {} pesquisas de satisfação", batchSize);
-                    parametrosBatch.clear(); // Limpa para o próximo lote
+                    parametrosBatch.clear();
                 }
             }
 
-            // Insere qualquer restante que não foi inserido no último lote
             if (!parametrosBatch.isEmpty()) {
                 conec.batchUpdate(sql, parametrosBatch);
                 logger.info("Inserido lote final de {} pesquisas de satisfação", parametrosBatch.size());
@@ -978,7 +995,10 @@ public class ETL {
         ConexBanco conectar = new ConexBanco();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
-        String sql = "INSERT INTO Aeroporto (siglaAeroporto, classificacao) VALUES (?, ?)";
+        String sqlInsert = "INSERT INTO Aeroporto (siglaAeroporto, classificacao) VALUES (?, ?)";
+        String sqlCheck = "SELECT COUNT(*) FROM Aeroporto WHERE siglaAeroporto = ?";
+
+        Set<String> aeroportosInseridos = new HashSet<>();
 
         int batchSize = 2000;
         List<Object[]> parametrosBatch = new ArrayList<>();
@@ -986,20 +1006,31 @@ public class ETL {
 
         try {
             for (Aeroporto aeroporto : aeroportos) {
+                String sigla = aeroporto.getSiglaAeroporto();
+
+                // Verifica se o aeroporto já está na lista para evitar duplicatas na extração
+                if (aeroportosInseridos.contains(sigla)) {
+                    logger.info("Aeroporto já processado: {}", sigla);
+                    continue;
+                }
+
+                // Verifica se o aeroporto já existe no banco
+                Integer existeNoBanco = conec.queryForObject(sqlCheck, Integer.class, sigla);
+                if (existeNoBanco != null && existeNoBanco > 0) {
+                    logger.info("Aeroporto já existe no banco: {}", sigla);
+                    continue;
+                }
+
                 Object[] parametros = {
                         aeroporto.getSiglaAeroporto(),
                         aeroporto.getClassificacao()
                 };
 
-                // Log dos dados que estão sendo inseridos para cada aeroporto
-                logger.info("Inserindo: siglaAeroporto={}, classificacao={}",
-                        aeroporto.getSiglaAeroporto(),
-                        aeroporto.getClassificacao());
-
                 parametrosBatch.add(parametros);
+                aeroportosInseridos.add(sigla); // Adiciona ao Set para controle
 
                 if (++count % batchSize == 0) {
-                    conec.batchUpdate(sql, parametrosBatch);
+                    conec.batchUpdate(sqlInsert, parametrosBatch);
                     parametrosBatch.clear();
                     logger.info("Inserido lote de {} aeroportos", batchSize);
                 }
@@ -1007,7 +1038,7 @@ public class ETL {
 
             // Insere o último lote, se houver registros restantes
             if (!parametrosBatch.isEmpty()) {
-                conec.batchUpdate(sql, parametrosBatch);
+                conec.batchUpdate(sqlInsert, parametrosBatch);
                 logger.info("Inserido lote final de {} aeroportos", parametrosBatch.size());
             }
         } catch (Exception e) {
@@ -1069,7 +1100,7 @@ public class ETL {
                 logger.info("Inserindo: Pesquisa_ID={}, Processo={}, Aeroporto={}, Terminal={}, Portao={}, TipoVoo={}, CiaAerea={}, Voo={}, Conexao={}",
                         informacaoVoo.getPesquisaID(),
                         informacaoVoo.getProcesso(),
-                        informacaoVoo.getAeroporto(),
+                        informacaoVoo.getaeroportoVoo(),
                         informacaoVoo.getTerminal(),
                         informacaoVoo.getPortao(),
                         informacaoVoo.getTipoVoo(),
@@ -1080,7 +1111,7 @@ public class ETL {
                 Object[] parametros = {
                         informacaoVoo.getPesquisaID(),
                         informacaoVoo.getProcesso(),
-                        informacaoVoo.getAeroporto(),
+                        informacaoVoo.getaeroportoVoo(),
                         informacaoVoo.getTerminal(),
                         informacaoVoo.getPortao(),
                         informacaoVoo.getTipoVoo(),

@@ -1,7 +1,6 @@
 package sptech.school;
 
-public class Sanitarios {
-    private Integer pesquisaID;
+public class Sanitarios extends PesquisaDeSatisfacao{
     private Integer sanitariosQt;
     private Integer quantidadeBanheiros;
     private Integer limpezaBanheiros;
@@ -13,7 +12,7 @@ public class Sanitarios {
     }
 
     public Sanitarios(Integer pesquisaID , Integer sanitariosQt, Integer quantidadeBanheiros, Integer limpezaBanheiros, Integer manutencaoGeralSanitarios, Integer limpezaGeralAeroporto) {
-        this.pesquisaID = pesquisaID;
+        super(pesquisaID);
         this.sanitariosQt = sanitariosQt;
         this.quantidadeBanheiros = quantidadeBanheiros;
         this.limpezaBanheiros = limpezaBanheiros;
@@ -21,13 +20,6 @@ public class Sanitarios {
         this.limpezaGeralAeroporto = limpezaGeralAeroporto;
     }
 
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
-    }
     public Integer getSanitarios() {
         return sanitariosQt;
     }

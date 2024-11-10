@@ -1,7 +1,6 @@
 package sptech.school;
 
-public class NecessidadesEspeciais {
-    private Integer pesquisaID;
+public class NecessidadesEspeciais extends  PesquisaDeSatisfacao{
     private String possuiDeficiencia; // Enum("Nenhuma", "Deficiência Física / Motora", etc.)
     private String utilizaRecursoAssistivo; // Enum("Nenhum", "Cadeira de rodas manual", etc.)
     private String solicitouAssistenciaEspecial; // Enum("Sim: com menos de 2 dias", etc.)
@@ -11,18 +10,10 @@ public class NecessidadesEspeciais {
     }
 
     public NecessidadesEspeciais(Integer pesquisaID, String possuiDeficiencia, String utilizaRecursoAssistivo, String solicitouAssistenciaEspecial) {
-        this.pesquisaID = pesquisaID;
+        super(pesquisaID);
         this.possuiDeficiencia = possuiDeficiencia;
         this.utilizaRecursoAssistivo = utilizaRecursoAssistivo;
         this.solicitouAssistenciaEspecial = solicitouAssistenciaEspecial;
-    }
-
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
     }
 
     public String getPossuiDeficiencia() {

@@ -1,9 +1,8 @@
 package sptech.school;
 
-public class InformacoesVoo {
-    private Integer pesquisaID;
+public class InformacoesVoo extends PesquisaDeSatisfacao{
     private String processo; // Enum("Embarque", "Desembarque")
-    private String aeroporto;
+    private String aeroportoVoo;
     private String terminal;
     private String portao; // Altere para String para aceitar números e texto
     private String tipoVoo; // Enum("Doméstico", "Internacional")
@@ -15,10 +14,10 @@ public class InformacoesVoo {
 
     }
 
-    public InformacoesVoo(Integer pesquisaID, String processo, String aeroporto, String terminal, String portao, String tipoVoo, String ciaAerea, String voo, String conexao) {
-        this.pesquisaID = pesquisaID;
+    public InformacoesVoo(Integer pesquisaID, String processo, String aeroportoVoo, String terminal, String portao, String tipoVoo, String ciaAerea, String voo, String conexao) {
+        super(pesquisaID);
         this.processo = processo;
-        this.aeroporto = aeroporto;
+        this.aeroportoVoo = aeroportoVoo;
         this.terminal = terminal;
         this.portao = portao; // Agora é um String
         this.tipoVoo = tipoVoo;
@@ -27,13 +26,6 @@ public class InformacoesVoo {
         this.conexao = conexao;
     }
 
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
-    }
 
     public String getProcesso() {
         return processo;
@@ -43,12 +35,12 @@ public class InformacoesVoo {
         this.processo = processo;
     }
 
-    public String getAeroporto() {
-        return aeroporto;
+    public String getaeroportoVoo() {
+        return aeroportoVoo;
     }
 
-    public void setAeroporto(String aeroporto) {
-        this.aeroporto = aeroporto;
+    public void setaeroportoVoo(String aeroporto) {
+        this.aeroportoVoo = aeroporto;
     }
 
     public String getTerminal() {

@@ -1,7 +1,6 @@
 package sptech.school;
 
-public class InspecaoSeguranca {
-    private Integer pesquisaID;
+public class InspecaoSeguranca extends PesquisaDeSatisfacao{
     private Integer processoInspecaoSeguranca;
     private Integer tempoEsperaFila;
     private Integer organizacaoFilas;
@@ -13,19 +12,11 @@ public class InspecaoSeguranca {
     }
 
     public InspecaoSeguranca(Integer pesquisaID, Integer processoInspecaoSeguranca, Integer tempoEsperaFila, Integer organizacaoFilas, Integer atendimentoFuncionarios) {
-        this.pesquisaID = pesquisaID;
+        super(pesquisaID);
         this.processoInspecaoSeguranca = processoInspecaoSeguranca;
         this.tempoEsperaFila = tempoEsperaFila;
         this.organizacaoFilas = organizacaoFilas;
         this.atendimentoFuncionarios = atendimentoFuncionarios;
-    }
-
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
     }
 
     public Integer getProcessoInspecaoSeguranca() {

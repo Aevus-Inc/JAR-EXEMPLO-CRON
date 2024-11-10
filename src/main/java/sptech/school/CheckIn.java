@@ -1,7 +1,6 @@
 package sptech.school;
 
-public class CheckIn {
-    private Integer pesquisaID;
+public class CheckIn extends PesquisaDeSatisfacao{
     private String formaCheckIn; // Enum("Balcão", "Totem AA", etc.)
     private Integer processoCheckIn;
     private Integer tempoEsperaFila;
@@ -16,7 +15,7 @@ public class CheckIn {
     }
 
     public CheckIn(Integer pesquisaID, String formaCheckIn, Integer processoCheckIn, Integer tempoEsperaFila, Integer organizacaoFilas, Integer quantidadeTotensAA, Integer quantidadeBalcoes, Integer cordialidadeFuncionarios, Integer tempoAtendimento) {
-        this.pesquisaID = pesquisaID;
+        super(pesquisaID);
         this.formaCheckIn = formaCheckIn;
         this.processoCheckIn = processoCheckIn;
         this.tempoEsperaFila = tempoEsperaFila;
@@ -28,14 +27,6 @@ public class CheckIn {
     }
 
     public CheckIn(PesquisaDeSatisfacao pesquisa, String stringCellValue, int numericCellValue, int numericCellValue1, int numericCellValue2, int numericCellValue3, int numericCellValue4) {
-    }
-
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
     }
 
     public String getFormaCheckIn() {

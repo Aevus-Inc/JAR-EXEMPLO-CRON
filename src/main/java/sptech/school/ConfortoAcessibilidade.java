@@ -1,7 +1,6 @@
 package sptech.school;
 
-public class ConfortoAcessibilidade {
-    private Integer pesquisaID;
+public class ConfortoAcessibilidade extends PesquisaDeSatisfacao{
     private Integer localizacaoDeslocamento;
     private Integer sinalizacao;
     private Integer disponibilidadePaineisInformacoesVoo;
@@ -22,7 +21,7 @@ public class ConfortoAcessibilidade {
     }
 
     public ConfortoAcessibilidade(Integer pesquisaID , Integer localizacaoDeslocamento, Integer sinalizacao, Integer disponibilidadePaineisInformacoesVoo, Integer acessibilidadeTerminal, Integer confortoSalaEmbarque, Integer confortoTermico, Integer confortoAcustico, Integer disponibilidadeAssentos, Integer disponibilidadeAssentosReservados, Integer disponibilidadeTomadas, Integer internetDisponibilizadaAeroporto, Integer velocidadeConexao, Integer facilidadeAcessoRede) {
-        this.pesquisaID = pesquisaID;
+        super(pesquisaID);
         this.localizacaoDeslocamento = localizacaoDeslocamento;
         this.sinalizacao = sinalizacao;
         this.disponibilidadePaineisInformacoesVoo = disponibilidadePaineisInformacoesVoo;
@@ -36,14 +35,6 @@ public class ConfortoAcessibilidade {
         this.internetDisponibilizadaAeroporto = internetDisponibilizadaAeroporto;
         this.velocidadeConexao = velocidadeConexao;
         this.facilidadeAcessoRede = facilidadeAcessoRede;
-    }
-
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
     }
 
     public Integer getLocalizacaoDeslocamento() {

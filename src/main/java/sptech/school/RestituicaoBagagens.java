@@ -1,7 +1,6 @@
 package sptech.school;
 
-public class RestituicaoBagagens {
-    private Integer pesquisaID;
+public class RestituicaoBagagens extends  PesquisaDeSatisfacao{
     private Integer processoRestituicaoBagagens;
     private Integer facilidadeIdentificacaoEsteira;
     private Integer tempoRestituicao;
@@ -13,20 +12,12 @@ public class RestituicaoBagagens {
     }
 
     public RestituicaoBagagens(Integer pesquisaID, Integer processoRestituicaoBagagens, Integer facilidadeIdentificacaoEsteira, Integer tempoRestituicao, Integer integridadeBagagem, Integer atendimentoCiaAerea) {
-        this.pesquisaID = pesquisaID;
+        super(pesquisaID);
         this.processoRestituicaoBagagens = processoRestituicaoBagagens;
         this.facilidadeIdentificacaoEsteira = facilidadeIdentificacaoEsteira;
         this.tempoRestituicao = tempoRestituicao;
         this.integridadeBagagem = integridadeBagagem;
         this.atendimentoCiaAerea = atendimentoCiaAerea;
-    }
-
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
     }
 
     public Integer getProcessoRestituicaoBagagens() {

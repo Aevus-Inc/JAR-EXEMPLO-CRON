@@ -1,7 +1,6 @@
 package sptech.school;
 
-public class Desembarque {
-    private Integer pesquisaID;
+public class Desembarque extends PesquisaDeSatisfacao{
     private String formaDesembarque; // Enum("Ponte", "Ambulift", etc.)
     private Integer avaliacaoMetodoDesembarque;
     private String utilizouEstacionamento;
@@ -13,20 +12,12 @@ public class Desembarque {
     }
 
     public Desembarque(Integer pesquisaID, String formaDesembarque, Integer avaliacaoMetodoDesembarque, String utilizouEstacionamento, Integer facilidadeDesembarqueMeioFio, Integer opcoesTransporteAeroporto) {
-        this.pesquisaID = pesquisaID;
+        super(pesquisaID);
         this.formaDesembarque = formaDesembarque;
         this.avaliacaoMetodoDesembarque = avaliacaoMetodoDesembarque;
         this.utilizouEstacionamento = utilizouEstacionamento;
         this.facilidadeDesembarqueMeioFio = facilidadeDesembarqueMeioFio;
         this.opcoesTransporteAeroporto = opcoesTransporteAeroporto;
-    }
-
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
     }
 
     public String getUtilizouEstacionamento() {

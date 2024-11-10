@@ -2,8 +2,8 @@ package sptech.school;
 
 public class PesquisaDeSatisfacao {
     private Integer pesquisaID;
-    private Passageiro passageiro;
-    private Aeroporto aeroporto;
+    private Integer passageiroID;
+    private Integer aeroportoId;
     private String mes;
     private String DataPesquisa;
 
@@ -11,15 +11,16 @@ public class PesquisaDeSatisfacao {
 
     }
 
-    public PesquisaDeSatisfacao(Integer pesquisaID, Passageiro passageiro, Aeroporto aeroporto, String mes, String DataPesquisa) {
+    public PesquisaDeSatisfacao(Integer pesquisaID, Integer passageiroID, Integer aeroportoId, String mes, String DataPesquisa) {
         this.pesquisaID = pesquisaID;
-        this.passageiro = passageiro;
-        this.aeroporto = aeroporto;
+        this.passageiroID = passageiroID;
+        this.aeroportoId = aeroportoId;
         this.mes = mes;
         this.DataPesquisa = DataPesquisa;
     }
 
     public PesquisaDeSatisfacao(Integer pesquisaID) {
+        this.pesquisaID = pesquisaID;
     }
 
     public Integer getPesquisaID() {
@@ -30,20 +31,20 @@ public class PesquisaDeSatisfacao {
         this.pesquisaID = pesquisaID;
     }
 
-    public Passageiro getPassageiro() {
-        return passageiro;
+    public Integer getpassageiroID() {
+        return passageiroID;
     }
 
-    public void setPassageiro(Passageiro passageiro) {
-        this.passageiro = passageiro;
+    public void setpassageiroID() {
+        this.passageiroID = passageiroID;
     }
 
-    public Aeroporto getAeroporto() {
-        return aeroporto;
+    public Integer getaeroportoId() {
+        return aeroportoId;
     }
 
-    public void setAeroporto(Aeroporto aeroporto) {
-        this.aeroporto = aeroporto;
+    public void setaeroportoId(Aeroporto aeroporto) {
+        this.aeroportoId = aeroportoId;
     }
 
     public String getMes() {

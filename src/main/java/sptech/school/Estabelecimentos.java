@@ -1,8 +1,6 @@
 package sptech.school;
 
-public class Estabelecimentos {
-
-    private Integer pesquisaID;
+public class Estabelecimentos extends PesquisaDeSatisfacao{
     private String estabelecimentosAlimentacao;
     private Integer quantidadeEstabelecimentosAlimentacao;
     private Integer qualidadeVariedadeOpcoesAlimentacao;
@@ -17,7 +15,7 @@ public class Estabelecimentos {
     }
 
     public Estabelecimentos(Integer pesquisaID, String estabelecimentosAlimentacao, Integer quantidadeEstabelecimentosAlimentacao, Integer qualidadeVariedadeOpcoesAlimentacao, Integer relacaoPrecoQualidadeAlimentacao, String estabelecimentosComerciais, Integer quantidadeEstabelecimentosComerciais, Integer qualidadeVariedadeOpcoesComerciais) {
-        this.pesquisaID = pesquisaID;
+        super(pesquisaID);
         this.estabelecimentosAlimentacao = estabelecimentosAlimentacao;
         this.quantidadeEstabelecimentosAlimentacao = quantidadeEstabelecimentosAlimentacao;
         this.qualidadeVariedadeOpcoesAlimentacao = qualidadeVariedadeOpcoesAlimentacao;
@@ -25,14 +23,6 @@ public class Estabelecimentos {
         this.estabelecimentosComerciais = estabelecimentosComerciais;
         this.quantidadeEstabelecimentosComerciais = quantidadeEstabelecimentosComerciais;
         this.qualidadeVariedadeOpcoesComerciais = qualidadeVariedadeOpcoesComerciais;
-    }
-
-    public Integer getPesquisaID() {
-        return pesquisaID;
-    }
-
-    public void setPesquisaID(Integer pesquisaID) {
-        this.pesquisaID = pesquisaID;
     }
 
     public String getEstabelecimentosAlimentacao() {
