@@ -27,14 +27,16 @@ import java.io.File;
 public class ETL {
     private static final Logger logger = LoggerFactory.getLogger(ETL.class);
     private static final String BUCKET_NAME = "s3-bucket-aevusec2";
-    private static final String LOG_FILE_PATH = "etl-process-log.txt";
 
     public void processarArquivosS3(List<String> arquivos, S3Client conexS3) {
-        try (FileWriter writer = new FileWriter(LOG_FILE_PATH, true)) {  // Abre o FileWriter em modo de apêndice
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String logFileName = "etl-process-log_" + timestamp + ".txt";
+
+        try (FileWriter writer = new FileWriter(logFileName)) {  // Abre o FileWriter em modo de apêndice
             for (String arquivo : arquivos) {
-                String timestamp = null;
+                String logTimestamp  = null;
                 try {
-                    timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                    logTimestamp  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
                     logger.info("Iniciando processamento do arquivo: " + arquivo + "\n");
                     writer.write("[" + timestamp + "] [INFO] Iniciando processamento do arquivo: " + arquivo + "\n");
 
@@ -93,22 +95,20 @@ public class ETL {
         }
 
         // Envia o arquivo de log para o S3 após o processamento de todos os arquivos
-        enviarLogParaS3(conexS3);
+        enviarLogParaS3(conexS3, logFileName);
     }
 
-    private void enviarLogParaS3(S3Client conexS3) {
+    private void enviarLogParaS3(S3Client conexS3, String logFileName) {
         try {
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String logFileName = "logs/etl-process-log_" + timestamp + ".txt";
-
-            File logFile = new File(LOG_FILE_PATH);
+            // Upload do arquivo de log para o S3
+            File logFile = new File(logFileName);
             conexS3.putObject(PutObjectRequest.builder()
                             .bucket(BUCKET_NAME)
-                            .key(logFileName)
+                            .key("logs/" + logFile.getName()) // Mantém o nome exclusivo no S3
                             .build(),
                     logFile.toPath());
 
-            logger.info("Arquivo de log enviado para o S3 com sucesso. Nome do arquivo: {}", logFileName);
+            logger.info("Arquivo de log enviado para o S3 com sucesso. Nome do arquivo: {}", logFile.getName());
         } catch (S3Exception e) {
             logger.error("Erro ao enviar o arquivo de log para o S3: {}", e.getMessage());
         }
