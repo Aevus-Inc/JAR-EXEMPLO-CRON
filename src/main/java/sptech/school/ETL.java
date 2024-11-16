@@ -253,14 +253,14 @@ public class ETL {
                 if (row != null) {
                     try {
                         String sigla = getCellValueAsString(row.getCell(2)); // Coluna da sigla
-                        Integer classificacao = getCellValueAsInteger(row.getCell(83)); // Coluna da classificação
+                        // Coluna da classificação
 
                         if (sigla != null && !sigla.isEmpty()) {
-                            Aeroporto aeroporto = new Aeroporto(sigla, classificacao);
+                            Aeroporto aeroporto = new Aeroporto(sigla);
                             aeroportosExtraidos.add(aeroporto);
 
-                            writer.write("[" + timestamp + "] [INFO] Aeroporto extraído - Sigla: " + sigla + ", Classificação: " + classificacao + "\n");
-                            logger.info("Aeroporto extraído - Sigla: {}, Classificação: {}", sigla, classificacao);
+                            writer.write("[" + timestamp + "] [INFO] Aeroporto extraído - Sigla: " + sigla + ", Classificação: " + "\n");
+                            logger.info("Aeroporto extraído - Sigla: {}, Classificação: {}", sigla);
                         }
                     } catch (Exception e) {
                         logger.warn("Erro ao processar dados do aeroporto na linha {}: {}", i, e.getMessage());
@@ -449,15 +449,16 @@ public class ETL {
                         String siglaAeroporto = row.getCell(2).getStringCellValue();     // Coluna B
                         String mes = row.getCell(4).getStringCellValue();                // Coluna E
                         String data = formatoData.format(row.getCell(3).getDateCellValue()); // Coluna D
+                        Integer classificacao = getCellValueAsInteger(row.getCell(83));
 
                         Integer aeroportoId = obterAeroportoIdPorSigla(siglaAeroporto); // Obtém ID pelo método
 
-                        PesquisaDeSatisfacao pesquisa = new PesquisaDeSatisfacao(pesquisaID, null, aeroportoId, mes, data);
+                        PesquisaDeSatisfacao pesquisa = new PesquisaDeSatisfacao(pesquisaID, null, aeroportoId, mes, data, classificacao);
                         pesquisasExtraidas.add(pesquisa);
 
                         logger.info("Pesquisa de satisfação extraída com ID={}, Sigla Aeroporto={}", pesquisaID, siglaAeroporto);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Pesquisa de satisfação extraída com ID=" + pesquisaID + ", Sigla Aeroporto=" + siglaAeroporto + "\n");
+                            writer.write("[" + timestamp + "] [INFO] Pesquisa de satisfação extraída com ID=" + pesquisaID + ", Sigla Aeroporto=" + siglaAeroporto + ", Classificação=" + classificacao + "\n");
                         } catch (IOException e) {
                             logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
                             try {
@@ -1621,7 +1622,7 @@ public class ETL {
         ConexBanco conectar = new ConexBanco();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
-        String sql = "INSERT IGNORE INTO PesquisaDeSatisfacao (Pesquisa_ID, Passageiro_ID, Aeroporto_idAeroporto, Mes, DataPesquisa) VALUES (?, ?, ?, ?, STR_TO_DATE(?, '%d/%m/%Y'))";
+        String sql = "INSERT IGNORE INTO PesquisaDeSatisfacao (Pesquisa_ID, Passageiro_ID, Aeroporto_idAeroporto, Mes, DataPesquisa, Satisfacao_Geral) VALUES (?, ?, ?, ?, STR_TO_DATE(?, '%d/%m/%Y'), ?)";
 
         int batchSize = 2000;
         List<Object[]> parametrosBatch = new ArrayList<>();
@@ -1639,14 +1640,17 @@ public class ETL {
                         null, // Supondo que Passageiro_ID não está sendo usado
                         pesquisa.getaeroportoId(),
                         pesquisa.getMes(),
-                        pesquisa.getData()
+                        pesquisa.getData(),
+                        pesquisa.getClassificacao()
                 };
 
-                logger.info("Inserindo: Pesquisa_ID={}, Aeroporto_idAeroporto={}, Mes={}, DataPesquisa={}",
+                logger.info("Inserindo: Pesquisa_ID={}, Aeroporto_idAeroporto={}, Mes={}, DataPesquisa={}, Satisfacao_Geral{}",
                         pesquisa.getPesquisaID(),
                         pesquisa.getaeroportoId(),
                         pesquisa.getMes(),
-                        pesquisa.getData());
+                        pesquisa.getData(),
+                        pesquisa.getClassificacao()
+                        );
 
                 parametrosBatch.add(parametros);
 
@@ -1672,7 +1676,7 @@ public class ETL {
         ConexBanco conectar = new ConexBanco();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
-        String sqlInsert = "INSERT INTO Aeroporto (siglaAeroporto, classificacao) VALUES (?, ?)";
+        String sqlInsert = "INSERT INTO Aeroporto (siglaAeroporto) VALUES (?)";
         String sqlCheck = "SELECT COUNT(*) FROM Aeroporto WHERE siglaAeroporto = ?";
 
         Set<String> aeroportosInseridos = new HashSet<>();
@@ -1700,7 +1704,6 @@ public class ETL {
 
                 Object[] parametros = {
                         aeroporto.getSiglaAeroporto(),
-                        aeroporto.getClassificacao()
                 };
 
                 parametrosBatch.add(parametros);
