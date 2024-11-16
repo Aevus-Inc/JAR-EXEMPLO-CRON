@@ -1,0 +1,742 @@
+Iniciando processamento do arquivo: 2023-01tri.xlsx
+Arquivo processado com sucesso: 2023-01tri.xlsx
+Iniciando processamento do arquivo: 2023-02tri.xlsx
+Arquivo processado com sucesso: 2023-02tri.xlsx
+Iniciando processamento do arquivo: 2023-03tri.xlsx
+Arquivo processado com sucesso: 2023-03tri.xlsx
+Iniciando processamento do arquivo: 2023-04tri.xlsx
+Arquivo processado com sucesso: 2023-04tri.xlsx
+Iniciando processamento do arquivo: 2024-01tri.xlsx
+Arquivo processado com sucesso: 2024-01tri.xlsx
+Iniciando processamento do arquivo: 2024-02tri.xlsx
+Arquivo processado com sucesso: 2024-02tri.xlsx
+Iniciando processamento do arquivo: 2023-01tri.xlsx
+Iniciando processamento do arquivo: 2023-01tri.xlsx
+Iniciando processamento do arquivo: 2023-01tri.xlsx
+Extraindo dados de aeroportos do arquivo: 2023-01tri.xlsx
+Aeroporto extraído - Sigla: SBMO, Classificação: 4
+Aeroporto extraído - Sigla: SBMO, Classificação: 3
+Aeroporto extraído - Sigla: SBMO, Classificação: 5
+Aeroporto extraído - Sigla: SBMO, Classificação: 3
+Aeroporto extraído - Sigla: SBSV, Classificação: 4
+Aeroporto extraído - Sigla: SBGO, Classificação: 4
+Aeroporto extraído - Sigla: SBGO, Classificação: 4
+Aeroporto extraído - Sigla: SBGO, Classificação: 4
+Aeroporto extraído - Sigla: SBGO, Classificação: 5
+Aeroporto extraído - Sigla: SBGO, Classificação: 5
+Dados de aeroportos extraídos com sucesso: 10
+Iniciando extração de dados de passageiros do arquivo: 2023-01tri.xlsx
+Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+Passageiro extraído: Nacionalidade=Estrangeira, Gênero=Masculino
+Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+Extração de passageiros concluída com sucesso. Total de passageiros extraídos: 10
+Iniciando extração de dados de pesquisas de satisfação do arquivo: 2023-01tri.xlsx
+Pesquisa de satisfação extraída com ID=1141783, Sigla Aeroporto=SBMO
+Pesquisa de satisfação extraída com ID=1141784, Sigla Aeroporto=SBMO
+Pesquisa de satisfação extraída com ID=1141785, Sigla Aeroporto=SBMO
+Pesquisa de satisfação extraída com ID=1141786, Sigla Aeroporto=SBMO
+Pesquisa de satisfação extraída com ID=1141798, Sigla Aeroporto=SBSV
+Pesquisa de satisfação extraída com ID=1141804, Sigla Aeroporto=SBGO
+Pesquisa de satisfação extraída com ID=1141805, Sigla Aeroporto=SBGO
+Pesquisa de satisfação extraída com ID=1141806, Sigla Aeroporto=SBGO
+Pesquisa de satisfação extraída com ID=1141807, Sigla Aeroporto=SBGO
+Pesquisa de satisfação extraída com ID=1141808, Sigla Aeroporto=SBGO
+Extração de pesquisas de satisfação concluída com sucesso. Total de pesquisas extraídas: 10
+Iniciando extração de dados de informações de voo do arquivo: 2023-01tri.xlsx
+Informações do voo extraídas com ID=1141783, Aeroporto=SBMO, Voo=3361.0
+Informações do voo extraídas com ID=1141784, Aeroporto=SBMO, Voo=3361.0
+Informações do voo extraídas com ID=1141785, Aeroporto=SBMO, Voo=1531.0
+Informações do voo extraídas com ID=1141786, Aeroporto=SBMO, Voo=1532.0
+Informações do voo extraídas com ID=1141798, Aeroporto=SBSV, Voo=1693.0
+Informações do voo extraídas com ID=1141804, Aeroporto=SBGO, Voo=3685.0
+Informações do voo extraídas com ID=1141805, Aeroporto=SBGO, Voo=4016.0
+Informações do voo extraídas com ID=1141806, Aeroporto=SBGO, Voo=3117.0
+Informações do voo extraídas com ID=1141807, Aeroporto=SBGO, Voo=2775.0
+Informações do voo extraídas com ID=1141808, Aeroporto=SBGO, Voo=3117.0
+Extração de informações de voo concluída com sucesso. Total de informações extraídas: 10
+Iniciando extração de dados de aquisições de passagem do arquivo: 2023-01tri.xlsx
+Aquisicao de passagem extraída com ID=1141783
+Aquisicao de passagem extraída com ID=1141784
+Aquisicao de passagem extraída com ID=1141785
+Aquisicao de passagem extraída com ID=1141786
+Aquisicao de passagem extraída com ID=1141798
+Aquisicao de passagem extraída com ID=1141804
+Aquisicao de passagem extraída com ID=1141805
+Aquisicao de passagem extraída com ID=1141806
+Aquisicao de passagem extraída com ID=1141807
+Aquisicao de passagem extraída com ID=1141808
+Extração de aquisições de passagem concluída com sucesso. Total de aquisições extraídas: 10
+Iniciando extração de dados de necessidades especiais do arquivo: 2023-01tri.xlsx
+Necessidade especial extraída com ID=1141783
+Necessidade especial extraída com ID=1141784
+Necessidade especial extraída com ID=1141785
+Necessidade especial extraída com ID=1141786
+Necessidade especial extraída com ID=1141798
+Necessidade especial extraída com ID=1141804
+Necessidade especial extraída com ID=1141805
+Necessidade especial extraída com ID=1141806
+Necessidade especial extraída com ID=1141807
+Necessidade especial extraída com ID=1141808
+Extração de necessidades especiais concluída com sucesso. Total de necessidades extraídas: 10
+Iniciando extração de dados de desembarque do arquivo: 2023-01tri.xlsx
+Desembarque extraído com ID=1141783
+Desembarque extraído com ID=1141784
+Desembarque extraído com ID=1141785
+Desembarque extraído com ID=1141786
+Desembarque extraído com ID=1141798
+Desembarque extraído com ID=1141804
+Desembarque extraído com ID=1141805
+Desembarque extraído com ID=1141806
+Desembarque extraído com ID=1141807
+Desembarque extraído com ID=1141808
+Extração de desembarques concluída com sucesso. Total de desembarques extraídos: 10
+Iniciando extração de dados de check-in do arquivo: 2023-01tri.xlsx
+Check-in extraído com ID=1141783
+Check-in extraído com ID=1141784
+Check-in extraído com ID=1141785
+Check-in extraído com ID=1141786
+Check-in extraído com ID=1141798
+Check-in extraído com ID=1141804
+Check-in extraído com ID=1141805
+Check-in extraído com ID=1141806
+Check-in extraído com ID=1141807
+Check-in extraído com ID=1141808
+Extração de check-ins concluída com sucesso. Total de check-ins extraídos: 10
+Iniciando extração de dados de InspecaoSeguranca do arquivo: 2023-01tri.xlsx
+Inspeção de segurança extraída com ID=1141783
+Inspeção de segurança extraída com ID=1141784
+Inspeção de segurança extraída com ID=1141785
+Inspeção de segurança extraída com ID=1141786
+Inspeção de segurança extraída com ID=1141798
+Inspeção de segurança extraída com ID=1141804
+Inspeção de segurança extraída com ID=1141805
+Inspeção de segurança extraída com ID=1141806
+Inspeção de segurança extraída com ID=1141807
+Inspeção de segurança extraída com ID=1141808
+Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: 10
+Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: 2023-01tri.xlsx
+Controle migratório aduaneiro extraído com ID=1141783
+Controle migratório aduaneiro extraído com ID=1141784
+Controle migratório aduaneiro extraído com ID=1141785
+Controle migratório aduaneiro extraído com ID=1141786
+Controle migratório aduaneiro extraído com ID=1141798
+Controle migratório aduaneiro extraído com ID=1141804
+Controle migratório aduaneiro extraído com ID=1141805
+Controle migratório aduaneiro extraído com ID=1141806
+Controle migratório aduaneiro extraído com ID=1141807
+Controle migratório aduaneiro extraído com ID=1141808
+Extração de ControleMigratorioAduaneiro concluída com sucesso. Total de controles extraídos: 10
+Iniciando extração de dados de Estabelecimentos do arquivo: 2023-01tri.xlsx
+Estabelecimento extraído com ID=1141783
+Estabelecimento extraído com ID=1141784
+Estabelecimento extraído com ID=1141785
+Estabelecimento extraído com ID=1141786
+Estabelecimento extraído com ID=1141798
+Estabelecimento extraído com ID=1141804
+Estabelecimento extraído com ID=1141805
+Estabelecimento extraído com ID=1141806
+Estabelecimento extraído com ID=1141807
+Estabelecimento extraído com ID=1141808
+Extração de Estabelecimentos concluída com sucesso. Total de estabelecimentos extraídos: 10
+Iniciando extração de dados de Estacionamento do arquivo: 2023-01tri.xlsx
+Estacionamento extraído com ID=1141783
+Estacionamento extraído com ID=1141784
+Estacionamento extraído com ID=1141785
+Estacionamento extraído com ID=1141786
+Estacionamento extraído com ID=1141798
+Estacionamento extraído com ID=1141804
+Estacionamento extraído com ID=1141805
+Estacionamento extraído com ID=1141806
+Estacionamento extraído com ID=1141807
+Estacionamento extraído com ID=1141808
+Extração de Estacionamento concluída com sucesso. Total de estacionamentos extraídos: 10
+Iniciando extração de dados de ConfortoAcessibilidade do arquivo: 2023-01tri.xlsx
+ConfortoAcessibilidade extraído com ID=1141783
+ConfortoAcessibilidade extraído com ID=1141784
+ConfortoAcessibilidade extraído com ID=1141785
+ConfortoAcessibilidade extraído com ID=1141786
+ConfortoAcessibilidade extraído com ID=1141798
+ConfortoAcessibilidade extraído com ID=1141804
+ConfortoAcessibilidade extraído com ID=1141805
+ConfortoAcessibilidade extraído com ID=1141806
+ConfortoAcessibilidade extraído com ID=1141807
+ConfortoAcessibilidade extraído com ID=1141808
+Extração de ConfortoAcessibilidade concluída com sucesso. Total de confortos acessibilidade extraídos: 10
+Iniciando extração de dados de Sanitarios do arquivo: 2023-01tri.xlsx
+Sanitarios extraído com ID=1141783
+Sanitarios extraído com ID=1141784
+Sanitarios extraído com ID=1141785
+Sanitarios extraído com ID=1141786
+Sanitarios extraído com ID=1141798
+Sanitarios extraído com ID=1141804
+Sanitarios extraído com ID=1141805
+Sanitarios extraído com ID=1141806
+Sanitarios extraído com ID=1141807
+Sanitarios extraído com ID=1141808
+Extração de Sanitarios concluída com sucesso. Total de sanitários extraídos: 10
+Iniciando extração de dados de RestituicaoBagagens do arquivo: 2023-01tri.xlsx
+RestituicaoBagagens extraído com ID=1141783
+RestituicaoBagagens extraído com ID=1141784
+RestituicaoBagagens extraído com ID=1141785
+RestituicaoBagagens extraído com ID=1141786
+RestituicaoBagagens extraído com ID=1141798
+RestituicaoBagagens extraído com ID=1141804
+RestituicaoBagagens extraído com ID=1141805
+RestituicaoBagagens extraído com ID=1141806
+RestituicaoBagagens extraído com ID=1141807
+RestituicaoBagagens extraído com ID=1141808
+Extração de RestituicaoBagagens concluída com sucesso. Total de RestituicaoBagagens extraídos: 10
+Arquivo processado com sucesso: 2023-01tri.xlsx
+[2024-11-15 23:01:13] [INFO] Iniciando processamento do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:01:14] [INFO] Extraindo dados de aeroportos do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 4
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 3
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 5
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 3
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBSV, Classificação: 4
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 4
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 4
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 4
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 5
+[2024-11-15 23:01:14] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 5
+[2024-11-15 23:01:14] [INFO] Dados de aeroportos extraídos com sucesso: 10
+[2024-11-15 23:01:20] [INFO] Iniciando extração de dados de passageiros do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Estrangeira, Gênero=Masculino
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:01:20] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:01:20] [INFO] Extração de passageiros concluída com sucesso. Total de passageiros extraídos: 10
+[2024-11-15 23:01:53] [INFO] Iniciando extração de dados de pesquisas de satisfação do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141783, Sigla Aeroporto=SBMO
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141784, Sigla Aeroporto=SBMO
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141785, Sigla Aeroporto=SBMO
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141786, Sigla Aeroporto=SBMO
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141798, Sigla Aeroporto=SBSV
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141804, Sigla Aeroporto=SBGO
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141805, Sigla Aeroporto=SBGO
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141806, Sigla Aeroporto=SBGO
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141807, Sigla Aeroporto=SBGO
+[2024-11-15 23:01:53] [INFO] Pesquisa de satisfação extraída com ID=1141808, Sigla Aeroporto=SBGO
+[2024-11-15 23:01:53] [INFO] Extração de pesquisas de satisfação concluída com sucesso. Total de pesquisas extraídas: 10
+[2024-11-15 23:02:23] [INFO] Iniciando extração de dados de informações de voo do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141783, Aeroporto=SBMO, Voo=3361.0
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141784, Aeroporto=SBMO, Voo=3361.0
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141785, Aeroporto=SBMO, Voo=1531.0
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141786, Aeroporto=SBMO, Voo=1532.0
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141798, Aeroporto=SBSV, Voo=1693.0
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141804, Aeroporto=SBGO, Voo=3685.0
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141805, Aeroporto=SBGO, Voo=4016.0
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141806, Aeroporto=SBGO, Voo=3117.0
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141807, Aeroporto=SBGO, Voo=2775.0
+[2024-11-15 23:02:23] [INFO] Informações do voo extraídas com ID=1141808, Aeroporto=SBGO, Voo=3117.0
+[2024-11-15 23:02:23] [INFO] Extração de informações de voo concluída com sucesso. Total de informações extraídas: 10
+[2024-11-15 23:02:56] [INFO] Iniciando extração de dados de aquisições de passagem do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141783
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141784
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141785
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141786
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141798
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141804
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141805
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141806
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141807
+[2024-11-15 23:02:56] [INFO] Aquisicao de passagem extraída com ID=1141808
+[2024-11-15 23:02:56] [INFO] Extração de aquisições de passagem concluída com sucesso. Total de aquisições extraídas: 10
+[2024-11-15 23:03:28] [INFO] Iniciando extração de dados de necessidades especiais do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141783
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141784
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141785
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141786
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141798
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141804
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141805
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141806
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141807
+[2024-11-15 23:03:28] [INFO] Necessidade especial extraída com ID=1141808
+[2024-11-15 23:03:28] [INFO] Extração de necessidades especiais concluída com sucesso. Total de necessidades extraídas: 10
+[2024-11-15 23:04:01] [INFO] Iniciando extração de dados de desembarque do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141783
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141784
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141785
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141786
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141798
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141804
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141805
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141806
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141807
+[2024-11-15 23:04:01] [INFO] Desembarque extraído com ID=1141808
+[2024-11-15 23:04:01] [INFO] Extração de desembarques concluída com sucesso. Total de desembarques extraídos: 10
+[2024-11-15 23:04:33] [INFO] Início da Extração - Iniciando extração de dados de check-in do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141783
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141784
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141785
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141786
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141798
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141804
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141805
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141806
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141807
+[2024-11-15 23:04:33] [INFO] Check-in extraído com ID=1141808
+[2024-11-15 23:04:33] [INFO] Extração de check-ins concluída com sucesso. Total de check-ins extraídos: 10
+[2024-11-15 23:05:03] [INFO] Iniciando extração de dados de InspecaoSeguranca do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141783
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141784
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141785
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141786
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141798
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141804
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141805
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141806
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141807
+[2024-11-15 23:05:03] [INFO] Inspeção de segurança extraída com ID=1141808
+[2024-11-15 23:05:03] [INFO] Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: 10
+[2024-11-15 23:05:34] [INFO] Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141783
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141784
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141785
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141786
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141798
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141804
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141805
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141806
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141807
+[2024-11-15 23:05:34] [INFO] Controle migratório aduaneiro extraído com ID=1141808
+[2024-11-15 23:05:34] [INFO] Extração de ControleMigratorioAduaneiro concluída com sucesso. Total de controles extraídos: 10
+[2024-11-15 23:06:06] [INFO] Iniciando extração de dados de Estabelecimentos do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141783
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141784
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141785
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141786
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141798
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141804
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141805
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141806
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141807
+[2024-11-15 23:06:06] [INFO] Estabelecimento extraído com ID=1141808
+[2024-11-15 23:06:06] [INFO] Extração de Estabelecimentos concluída com sucesso. Total de estabelecimentos extraídos: 10
+[2024-11-15 23:06:39] [INFO] Iniciando extração de dados de Estacionamento do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141783
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141784
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141785
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141786
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141798
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141804
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141805
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141806
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141807
+[2024-11-15 23:06:39] [INFO] Estacionamento extraído com ID=1141808
+[2024-11-15 23:06:39] [INFO] Extração de Estacionamento concluída com sucesso. Total de estacionamentos extraídos: 10
+[2024-11-15 23:07:11] [INFO] Iniciando extração de dados de ConfortoAcessibilidade do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141783
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141784
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141785
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141786
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141798
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141804
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141805
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141806
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141807
+[2024-11-15 23:07:11] [INFO] ConfortoAcessibilidade extraído com ID=1141808
+[2024-11-15 23:07:11] [INFO] Extração de ConfortoAcessibilidade concluída com sucesso. Total de confortos acessibilidade extraídos: 10
+[2024-11-15 23:07:44] [INFO] Iniciando extração de dados de Sanitários do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141783
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141784
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141785
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141786
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141798
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141804
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141805
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141806
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141807
+[2024-11-15 23:07:44] [INFO] Sanitários extraído com ID=1141808
+[2024-11-15 23:07:44] [INFO] Extração de Sanitários concluída com sucesso. Total de sanitários extraídos: 10
+[2024-11-15 23:08:14] [INFO] Iniciando extração de dados de RestituicaoBagagens do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141783
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141784
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141785
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141786
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141798
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141804
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141805
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141806
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141807
+[2024-11-15 23:08:14] [INFO] RestituicaoBagagens extraído com ID=1141808
+[2024-11-15 23:08:14] [INFO] Extração de RestituicaoBagagens concluída com sucesso. Total de RestituicaoBagagens extraídos: 10
+[2024-11-15 23:01:13] [INFO] Arquivo processado com sucesso: 2023-01tri.xlsx
+[2024-11-15 23:15:46] [INFO] Iniciando processamento do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:15:48] [INFO] Extraindo dados de aeroportos do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 4
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 3
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 5
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 3
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBSV, Classificação: 4
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 4
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 4
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 4
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 5
+[2024-11-15 23:15:48] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 5
+[2024-11-15 23:15:48] [INFO] Dados de aeroportos extraídos com sucesso: 10
+[2024-11-15 23:15:53] [INFO] Iniciando extração de dados de passageiros do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Estrangeira, Gênero=Masculino
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:15:53] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:15:53] [INFO] Extração de passageiros concluída com sucesso. Total de passageiros extraídos: 10
+[2024-11-15 23:16:26] [INFO] Iniciando extração de dados de pesquisas de satisfação do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141783, Sigla Aeroporto=SBMO
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141784, Sigla Aeroporto=SBMO
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141785, Sigla Aeroporto=SBMO
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141786, Sigla Aeroporto=SBMO
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141798, Sigla Aeroporto=SBSV
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141804, Sigla Aeroporto=SBGO
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141805, Sigla Aeroporto=SBGO
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141806, Sigla Aeroporto=SBGO
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141807, Sigla Aeroporto=SBGO
+[2024-11-15 23:16:26] [INFO] Pesquisa de satisfação extraída com ID=1141808, Sigla Aeroporto=SBGO
+[2024-11-15 23:16:26] [INFO] Extração de pesquisas de satisfação concluída com sucesso. Total de pesquisas extraídas: 10
+[2024-11-15 23:16:56] [INFO] Iniciando extração de dados de informações de voo do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141783, Aeroporto=SBMO, Voo=3361.0
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141784, Aeroporto=SBMO, Voo=3361.0
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141785, Aeroporto=SBMO, Voo=1531.0
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141786, Aeroporto=SBMO, Voo=1532.0
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141798, Aeroporto=SBSV, Voo=1693.0
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141804, Aeroporto=SBGO, Voo=3685.0
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141805, Aeroporto=SBGO, Voo=4016.0
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141806, Aeroporto=SBGO, Voo=3117.0
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141807, Aeroporto=SBGO, Voo=2775.0
+[2024-11-15 23:16:56] [INFO] Informações do voo extraídas com ID=1141808, Aeroporto=SBGO, Voo=3117.0
+[2024-11-15 23:16:56] [INFO] Extração de informações de voo concluída com sucesso. Total de informações extraídas: 10
+[2024-11-15 23:17:29] [INFO] Iniciando extração de dados de aquisições de passagem do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141783
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141784
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141785
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141786
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141798
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141804
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141805
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141806
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141807
+[2024-11-15 23:17:29] [INFO] Aquisicao de passagem extraída com ID=1141808
+[2024-11-15 23:17:29] [INFO] Extração de aquisições de passagem concluída com sucesso. Total de aquisições extraídas: 10
+[2024-11-15 23:18:02] [INFO] Iniciando extração de dados de necessidades especiais do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141783
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141784
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141785
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141786
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141798
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141804
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141805
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141806
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141807
+[2024-11-15 23:18:02] [INFO] Necessidade especial extraída com ID=1141808
+[2024-11-15 23:18:02] [INFO] Extração de necessidades especiais concluída com sucesso. Total de necessidades extraídas: 10
+[2024-11-15 23:18:34] [INFO] Iniciando extração de dados de desembarque do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141783
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141784
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141785
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141786
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141798
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141804
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141805
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141806
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141807
+[2024-11-15 23:18:34] [INFO] Desembarque extraído com ID=1141808
+[2024-11-15 23:18:34] [INFO] Extração de desembarques concluída com sucesso. Total de desembarques extraídos: 10
+[2024-11-15 23:19:07] [INFO] Início da Extração - Iniciando extração de dados de check-in do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141783
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141784
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141785
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141786
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141798
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141804
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141805
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141806
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141807
+[2024-11-15 23:19:07] [INFO] Check-in extraído com ID=1141808
+[2024-11-15 23:19:07] [INFO] Extração de check-ins concluída com sucesso. Total de check-ins extraídos: 10
+[2024-11-15 23:19:37] [INFO] Iniciando extração de dados de InspecaoSeguranca do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141783
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141784
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141785
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141786
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141798
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141804
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141805
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141806
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141807
+[2024-11-15 23:19:37] [INFO] Inspeção de segurança extraída com ID=1141808
+[2024-11-15 23:19:37] [INFO] Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: 10
+[2024-11-15 23:20:07] [INFO] Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141783
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141784
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141785
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141786
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141798
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141804
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141805
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141806
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141807
+[2024-11-15 23:20:07] [INFO] Controle migratório aduaneiro extraído com ID=1141808
+[2024-11-15 23:20:07] [INFO] Extração de ControleMigratorioAduaneiro concluída com sucesso. Total de controles extraídos: 10
+[2024-11-15 23:20:40] [INFO] Iniciando extração de dados de Estabelecimentos do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141783
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141784
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141785
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141786
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141798
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141804
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141805
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141806
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141807
+[2024-11-15 23:20:40] [INFO] Estabelecimento extraído com ID=1141808
+[2024-11-15 23:20:40] [INFO] Extração de Estabelecimentos concluída com sucesso. Total de estabelecimentos extraídos: 10
+[2024-11-15 23:21:12] [INFO] Iniciando extração de dados de Estacionamento do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141783
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141784
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141785
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141786
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141798
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141804
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141805
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141806
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141807
+[2024-11-15 23:21:12] [INFO] Estacionamento extraído com ID=1141808
+[2024-11-15 23:21:12] [INFO] Extração de Estacionamento concluída com sucesso. Total de estacionamentos extraídos: 10
+[2024-11-15 23:21:45] [INFO] Iniciando extração de dados de ConfortoAcessibilidade do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141783
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141784
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141785
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141786
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141798
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141804
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141805
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141806
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141807
+[2024-11-15 23:21:45] [INFO] ConfortoAcessibilidade extraído com ID=1141808
+[2024-11-15 23:21:45] [INFO] Extração de ConfortoAcessibilidade concluída com sucesso. Total de confortos acessibilidade extraídos: 10
+[2024-11-15 23:22:18] [INFO] Iniciando extração de dados de Sanitários do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141783
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141784
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141785
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141786
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141798
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141804
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141805
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141806
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141807
+[2024-11-15 23:22:18] [INFO] Sanitários extraído com ID=1141808
+[2024-11-15 23:22:18] [INFO] Extração de Sanitários concluída com sucesso. Total de sanitários extraídos: 10
+[2024-11-15 23:22:48] [INFO] Iniciando extração de dados de RestituicaoBagagens do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141783
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141784
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141785
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141786
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141798
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141804
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141805
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141806
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141807
+[2024-11-15 23:22:48] [INFO] RestituicaoBagagens extraído com ID=1141808
+[2024-11-15 23:22:48] [INFO] Extração de RestituicaoBagagens concluída com sucesso. Total de RestituicaoBagagens extraídos: 10
+[2024-11-15 23:15:46] [INFO] Arquivo processado com sucesso: 2023-01tri.xlsx
+[2024-11-15 23:40:34] [INFO] Iniciando processamento do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:40:36] [INFO] Extraindo dados de aeroportos do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 4
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 3
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 5
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBMO, Classificação: 3
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBSV, Classificação: 4
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 4
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 4
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 4
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 5
+[2024-11-15 23:40:36] [INFO] Aeroporto extraído - Sigla: SBGO, Classificação: 5
+[2024-11-15 23:40:36] [INFO] Dados de aeroportos extraídos com sucesso: 10
+[2024-11-15 23:40:42] [INFO] Iniciando extração de dados de passageiros do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Estrangeira, Gênero=Masculino
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Masculino
+[2024-11-15 23:40:42] [INFO] Passageiro extraído: Nacionalidade=Brasileira, Gênero=Feminino
+[2024-11-15 23:40:42] [INFO] Extração de passageiros concluída com sucesso. Total de passageiros extraídos: 10
+[2024-11-15 23:41:15] [INFO] Iniciando extração de dados de pesquisas de satisfação do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141783, Sigla Aeroporto=SBMO
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141784, Sigla Aeroporto=SBMO
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141785, Sigla Aeroporto=SBMO
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141786, Sigla Aeroporto=SBMO
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141798, Sigla Aeroporto=SBSV
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141804, Sigla Aeroporto=SBGO
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141805, Sigla Aeroporto=SBGO
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141806, Sigla Aeroporto=SBGO
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141807, Sigla Aeroporto=SBGO
+[2024-11-15 23:41:15] [INFO] Pesquisa de satisfação extraída com ID=1141808, Sigla Aeroporto=SBGO
+[2024-11-15 23:41:15] [INFO] Extração de pesquisas de satisfação concluída com sucesso. Total de pesquisas extraídas: 10
+[2024-11-15 23:41:45] [INFO] Iniciando extração de dados de informações de voo do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141783, Aeroporto=SBMO, Voo=3361.0
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141784, Aeroporto=SBMO, Voo=3361.0
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141785, Aeroporto=SBMO, Voo=1531.0
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141786, Aeroporto=SBMO, Voo=1532.0
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141798, Aeroporto=SBSV, Voo=1693.0
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141804, Aeroporto=SBGO, Voo=3685.0
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141805, Aeroporto=SBGO, Voo=4016.0
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141806, Aeroporto=SBGO, Voo=3117.0
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141807, Aeroporto=SBGO, Voo=2775.0
+[2024-11-15 23:41:45] [INFO] Informações do voo extraídas com ID=1141808, Aeroporto=SBGO, Voo=3117.0
+[2024-11-15 23:41:45] [INFO] Extração de informações de voo concluída com sucesso. Total de informações extraídas: 10
+[2024-11-15 23:42:18] [INFO] Iniciando extração de dados de aquisições de passagem do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141783
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141784
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141785
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141786
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141798
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141804
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141805
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141806
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141807
+[2024-11-15 23:42:18] [INFO] Aquisicao de passagem extraída com ID=1141808
+[2024-11-15 23:42:18] [INFO] Extração de aquisições de passagem concluída com sucesso. Total de aquisições extraídas: 10
+[2024-11-15 23:42:50] [INFO] Iniciando extração de dados de necessidades especiais do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141783
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141784
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141785
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141786
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141798
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141804
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141805
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141806
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141807
+[2024-11-15 23:42:50] [INFO] Necessidade especial extraída com ID=1141808
+[2024-11-15 23:42:50] [INFO] Extração de necessidades especiais concluída com sucesso. Total de necessidades extraídas: 10
+[2024-11-15 23:43:23] [INFO] Iniciando extração de dados de desembarque do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141783
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141784
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141785
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141786
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141798
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141804
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141805
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141806
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141807
+[2024-11-15 23:43:23] [INFO] Desembarque extraído com ID=1141808
+[2024-11-15 23:43:23] [INFO] Extração de desembarques concluída com sucesso. Total de desembarques extraídos: 10
+[2024-11-15 23:43:55] [INFO] Início da Extração - Iniciando extração de dados de check-in do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141783
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141784
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141785
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141786
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141798
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141804
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141805
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141806
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141807
+[2024-11-15 23:43:55] [INFO] Check-in extraído com ID=1141808
+[2024-11-15 23:43:55] [INFO] Extração de check-ins concluída com sucesso. Total de check-ins extraídos: 10
+[2024-11-15 23:44:26] [INFO] Iniciando extração de dados de InspecaoSeguranca do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141783
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141784
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141785
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141786
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141798
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141804
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141805
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141806
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141807
+[2024-11-15 23:44:26] [INFO] Inspeção de segurança extraída com ID=1141808
+[2024-11-15 23:44:26] [INFO] Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: 10
+[2024-11-15 23:44:56] [INFO] Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141783
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141784
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141785
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141786
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141798
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141804
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141805
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141806
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141807
+[2024-11-15 23:44:56] [INFO] Controle migratório aduaneiro extraído com ID=1141808
+[2024-11-15 23:44:56] [INFO] Extração de ControleMigratorioAduaneiro concluída com sucesso. Total de controles extraídos: 10
+[2024-11-15 23:45:28] [INFO] Iniciando extração de dados de Estabelecimentos do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141783
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141784
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141785
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141786
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141798
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141804
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141805
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141806
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141807
+[2024-11-15 23:45:28] [INFO] Estabelecimento extraído com ID=1141808
+[2024-11-15 23:45:28] [INFO] Extração de Estabelecimentos concluída com sucesso. Total de estabelecimentos extraídos: 10
+[2024-11-15 23:46:01] [INFO] Iniciando extração de dados de Estacionamento do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141783
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141784
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141785
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141786
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141798
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141804
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141805
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141806
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141807
+[2024-11-15 23:46:01] [INFO] Estacionamento extraído com ID=1141808
+[2024-11-15 23:46:01] [INFO] Extração de Estacionamento concluída com sucesso. Total de estacionamentos extraídos: 10
+[2024-11-15 23:46:33] [INFO] Iniciando extração de dados de ConfortoAcessibilidade do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141783
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141784
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141785
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141786
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141798
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141804
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141805
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141806
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141807
+[2024-11-15 23:46:33] [INFO] ConfortoAcessibilidade extraído com ID=1141808
+[2024-11-15 23:46:33] [INFO] Extração de ConfortoAcessibilidade concluída com sucesso. Total de confortos acessibilidade extraídos: 10
+[2024-11-15 23:47:06] [INFO] Iniciando extração de dados de Sanitários do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141783
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141784
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141785
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141786
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141798
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141804
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141805
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141806
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141807
+[2024-11-15 23:47:06] [INFO] Sanitários extraído com ID=1141808
+[2024-11-15 23:47:06] [INFO] Extração de Sanitários concluída com sucesso. Total de sanitários extraídos: 10
+[2024-11-15 23:47:36] [INFO] Iniciando extração de dados de RestituicaoBagagens do arquivo: 2023-01tri.xlsx
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141783
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141784
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141785
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141786
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141798
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141804
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141805
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141806
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141807
+[2024-11-15 23:47:36] [INFO] RestituicaoBagagens extraído com ID=1141808
+[2024-11-15 23:47:36] [INFO] Extração de RestituicaoBagagens concluída com sucesso. Total de RestituicaoBagagens extraídos: 10
+[2024-11-15 23:40:34] [INFO] Arquivo processado com sucesso: 2023-01tri.xlsx

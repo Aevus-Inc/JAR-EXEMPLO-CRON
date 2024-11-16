@@ -10,6 +10,7 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.ByteArrayInputStream;
@@ -19,61 +20,101 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Consumer;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.File;
 
 public class ETL {
     private static final Logger logger = LoggerFactory.getLogger(ETL.class);
     private static final String BUCKET_NAME = "s3-bucket-aevusec2";
+    private static final String LOG_FILE_PATH = "etl-process-log.txt";
 
     public void processarArquivosS3(List<String> arquivos, S3Client conexS3) {
+        try (FileWriter writer = new FileWriter(LOG_FILE_PATH, true)) {  // Abre o FileWriter em modo de apêndice
+            for (String arquivo : arquivos) {
+                String timestamp = null;
+                try {
+                    timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                    logger.info("Iniciando processamento do arquivo: " + arquivo + "\n");
+                    writer.write("[" + timestamp + "] [INFO] Iniciando processamento do arquivo: " + arquivo + "\n");
 
-        for (String arquivo : arquivos) {
-            try {
-                byte[] arquivoBytes = conexS3.getObject(GetObjectRequest.builder()
-                        .bucket(BUCKET_NAME)
-                        .key(arquivo)
-                        .build()).readAllBytes();
+                    // Baixa o arquivo do S3
+                    byte[] arquivoBytes = conexS3.getObject(GetObjectRequest.builder()
+                            .bucket(BUCKET_NAME)
+                            .key(arquivo)
+                            .build()).readAllBytes();
 
-                if (arquivoBytes.length == 0) {
-                    throw new RuntimeException("O arquivo fornecido está vazio (zero bytes). Verifique o bucket S3.");
-                }
-
-                List<Consumer<InputStream>> processos = Arrays.asList(
-                        stream -> InserirAeroportosNoBanco(ExtrairDadosAeroporto(arquivo, stream)),
-                        stream -> inserirPassageirosNoBanco(extrairDadosPassageiro(arquivo, stream)),
-                        stream -> inserirPesquisasNoBanco(extrairDadosPesquisaSatisfacao(arquivo, stream)),
-                        stream -> inserirInformacoesVooNoBanco(extrairDadosInformacoesVoo(arquivo, stream)),
-                        stream -> InserirPassagemNoBanco(extrairDadosAquisicaoPassagem(arquivo, stream)),
-                        stream -> inserirNecessidadesEspeciaisNoBanco(extrairDadosNecessidadesEspeciais(arquivo, stream)),
-                        stream -> inserirDesembarqueNoBanco(extrairDadosDesembarque(arquivo, stream)),
-                        stream -> InserirCheckInBanco(ExtrairDadosCheckIn(arquivo, stream)),
-                        stream -> inserirInspecaoSegurancaNoBanco(extrairDadosInspecaoSeguranca(arquivo, stream)),
-                        stream -> inserirControleMigratorioAduaneiro(extrairDadosControleMigratorioAduaneiro(arquivo, stream)),
-                        stream -> inserirEstabelecimentosNoBanco(extrairDadosEstabelecimentos(arquivo, stream)),
-                        stream -> inserirEstacionamentoNoBanco(extrairDadosEstacionamento(arquivo, stream)),
-                        stream -> inserirConfortoAcessibilidade(extrairConfortoAcessibilidade(arquivo, stream)),
-                        stream -> inserirDadosSanitarios(extrairDadosSanitarios(arquivo, stream)),
-                        stream -> inserirDadosBagagens(extrairDadosBagagens(arquivo, stream))
-
-                );
-
-                for (Consumer<InputStream> processo : processos) {
-                    try (InputStream stream = new ByteArrayInputStream(arquivoBytes)) {
-                        processo.accept(stream);
+                    if (arquivoBytes.length == 0) {
+                        String errorMsg = "O arquivo fornecido está vazio (zero bytes). Verifique o bucket S3.";
+                        logger.error(errorMsg);
+                        writer.write("[" + timestamp + "] [ERROR] " + errorMsg + "\n");
+                        throw new RuntimeException(errorMsg);
                     }
+
+                    // Lista de processos a serem executados em cada arquivo
+                    List<Consumer<InputStream>> processos = Arrays.asList(
+                            stream -> InserirAeroportosNoBanco(ExtrairDadosAeroporto(arquivo, stream, writer)),
+                            stream -> inserirPassageirosNoBanco(extrairDadosPassageiro(arquivo, stream, writer)),
+                            stream -> inserirPesquisasNoBanco(extrairDadosPesquisaSatisfacao(arquivo, stream, writer)),
+                            stream -> inserirInformacoesVooNoBanco(extrairDadosInformacoesVoo(arquivo, stream, writer)),
+                            stream -> InserirPassagemNoBanco(extrairDadosAquisicaoPassagem(arquivo, stream, writer)),
+                            stream -> inserirNecessidadesEspeciaisNoBanco(extrairDadosNecessidadesEspeciais(arquivo, stream, writer)),
+                            stream -> inserirDesembarqueNoBanco(extrairDadosDesembarque(arquivo, stream, writer)),
+                            stream -> InserirCheckInBanco(ExtrairDadosCheckIn(arquivo, stream, writer)),
+                            stream -> inserirInspecaoSegurancaNoBanco(extrairDadosInspecaoSeguranca(arquivo, stream, writer)),
+                            stream -> inserirControleMigratorioAduaneiro(extrairDadosControleMigratorioAduaneiro(arquivo, stream, writer)),
+                            stream -> inserirEstabelecimentosNoBanco(extrairDadosEstabelecimentos(arquivo, stream, writer)),
+                            stream -> inserirEstacionamentoNoBanco(extrairDadosEstacionamento(arquivo, stream, writer)),
+                            stream -> inserirConfortoAcessibilidade(extrairConfortoAcessibilidade(arquivo, stream, writer)),
+                            stream -> inserirDadosSanitarios(extrairDadosSanitarios(arquivo, stream, writer)),
+                            stream -> inserirDadosBagagens(extrairDadosBagagens(arquivo, stream, writer))
+                    );
+
+                    // Executa cada processo com um novo InputStream
+                    for (Consumer<InputStream> processo : processos) {
+                        try (InputStream stream = new ByteArrayInputStream(arquivoBytes)) {
+                            processo.accept(stream);
+                        }
+                    }
+                    writer.write("[" + timestamp + "] [INFO] Arquivo processado com sucesso: " + arquivo + "\n");
+                    logger.info("Arquivo processado com sucesso: {}", arquivo);
+                    inserirLogNoBanco("INFO", arquivo, "Processamento do arquivo", "Arquivo processado com sucesso");
+
+                } catch (IOException | S3Exception e) {
+                    String errorMsg = "Erro ao processar o arquivo " + arquivo + ": " + e.getMessage();
+                    writer.write("[" + timestamp + "] [ERROR] " + errorMsg + "\n");
+                    logger.error(errorMsg);
+                    inserirLogNoBanco("ERROR", arquivo, "Erro no processamento", e.getMessage());
+                    logger.info("Continuando para o próximo arquivo...");
                 }
-
-                logger.info("Arquivo processado com sucesso: {}", arquivo);
-                inserirLogNoBanco("INFO", arquivo, "Processamento do arquivo", "Arquivo processado com sucesso");
-
-            } catch (IOException | S3Exception e) {
-                logger.error("Erro ao processar o arquivo {}: {}", arquivo, e.getMessage());
-                inserirLogNoBanco("ERROR", arquivo, "Erro no processamento", e.getMessage());
-                logger.info("Continuando para o próximo arquivo...");
             }
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+        }
+
+        // Envia o arquivo de log para o S3 após o processamento de todos os arquivos
+        enviarLogParaS3(conexS3);
+    }
+
+    private void enviarLogParaS3(S3Client conexS3) {
+        try {
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String logFileName = "logs/etl-process-log_" + timestamp + ".txt";
+
+            File logFile = new File(LOG_FILE_PATH);
+            conexS3.putObject(PutObjectRequest.builder()
+                            .bucket(BUCKET_NAME)
+                            .key(logFileName)
+                            .build(),
+                    logFile.toPath());
+
+            logger.info("Arquivo de log enviado para o S3 com sucesso. Nome do arquivo: {}", logFileName);
+        } catch (S3Exception e) {
+            logger.error("Erro ao enviar o arquivo de log para o S3: {}", e.getMessage());
         }
     }
 
-
+    //METODOS AUXILIARES PARA A ETL
     //Método auxiliar para obter valor da célula como String
     private String getCellValueAsString(Cell cell) {
         if (cell == null) {
@@ -168,7 +209,6 @@ public class ETL {
                 return null;
         }
     }
-
     public Integer obterAeroportoIdPorSigla(String sigla) {
         String sql = "SELECT idAeroporto FROM Aeroporto WHERE UPPER(siglaAeroporto) = UPPER(?)";
         JdbcTemplate jdbcTemplate = new ConexBanco().getConexaoBanco();
@@ -189,9 +229,18 @@ public class ETL {
         }
     }
 
-    public List<Aeroporto> ExtrairDadosAeroporto(String nomeArquivo, InputStream arquivo) {
-        logger.info("Extraindo dados de aeroportos do arquivo: {}", nomeArquivo);
-        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Extraindo dados de aeroportos do arquivo: " + nomeArquivo);
+    //EXTRAÇÃO
+
+    public List<Aeroporto> ExtrairDadosAeroporto(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        logger.info("Iniciando a extração de dados de aeroportos do arquivo: {}", nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extraindo dados de aeroportos do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+        }
+
         List<Aeroporto> aeroportosExtraidos = new ArrayList<>();
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -203,34 +252,62 @@ public class ETL {
                 Row row = sheet.getRow(i);
                 if (row != null) {
                     try {
-                        String sigla = getCellValueAsString(row.getCell(2));  // Coluna da sigla
-                        Integer classificacao = getCellValueAsInteger(row.getCell(83));  // Coluna da classificação
+                        String sigla = getCellValueAsString(row.getCell(2)); // Coluna da sigla
+                        Integer classificacao = getCellValueAsInteger(row.getCell(83)); // Coluna da classificação
 
                         if (sigla != null && !sigla.isEmpty()) {
                             Aeroporto aeroporto = new Aeroporto(sigla, classificacao);
                             aeroportosExtraidos.add(aeroporto);
-                            inserirLogNoBanco("INFO", nomeArquivo, "Aeroporto Extraído", "Sigla: " + sigla + ", Classificação: " + classificacao);
+
+                            writer.write("[" + timestamp + "] [INFO] Aeroporto extraído - Sigla: " + sigla + ", Classificação: " + classificacao + "\n");
+                            logger.info("Aeroporto extraído - Sigla: {}, Classificação: {}", sigla, classificacao);
                         }
                     } catch (Exception e) {
                         logger.warn("Erro ao processar dados do aeroporto na linha {}: {}", i, e.getMessage());
-                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados", "Erro ao processar dados do aeroporto na linha " + i + ": " + e.getMessage());
+                        try {
+                            writer.write("[" + timestamp + "] [WARN] Erro ao processar dados do aeroporto na linha " + i + ": " + e.getMessage() + "\n");
+                        } catch (IOException ex) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de aeroportos extraídos com sucesso: {}", aeroportosExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Dados de aeroportos extraídos com sucesso: " + aeroportosExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Dados de aeroportos extraídos com sucesso: " + aeroportosExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+        }
+
         return aeroportosExtraidos;
     }
 
-    public List<Passageiro> extrairDadosPassageiro(String nomeArquivo, InputStream arquivo) {
-        logger.info("Extraindo dados de passageiros do arquivo: {}", nomeArquivo);
+    public List<Passageiro> extrairDadosPassageiro(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de passageiros do arquivo: " + nomeArquivo);
+        logger.info("Iniciando a extração de dados de passageiros do arquivo: {}", nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de passageiros do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
+
         List<Passageiro> passageirosExtraidos = new ArrayList<>();
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -279,31 +356,82 @@ public class ETL {
                                 jaEmbarcouDesembarcouAntes, antecedencia, tempoEspera, comentariosAdicionais);
                         passageirosExtraidos.add(passageiro);
 
-                        inserirLogNoBanco("INFO", nomeArquivo, "Passageiro Extraído",
-                                "Passageiro extraído: Nacionalidade=" + nacionalidade + ", Gênero=" + genero);
+                        logger.info("Passageiro extraído: Nacionalidade={}, Gênero={}", nacionalidade, genero);
+                        inserirLogNoBanco("INFO", nomeArquivo, "Passageiro Extraído", "Passageiro extraído: Nacionalidade=" + nacionalidade + ", Gênero=" + genero);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Passageiro extraído: Nacionalidade=" + nacionalidade + ", Gênero=" + genero + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
+
                     } catch (Exception e) {
                         logger.warn("Erro ao processar dados do passageiro na linha {}: {}", i, e.getMessage());
-                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados",
-                                "Erro ao processar dados do passageiro na linha " + i + ": " + e.getMessage());
+                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados", "Erro ao processar dados do passageiro na linha " + i + ": " + e.getMessage());
+                        try {
+                            writer.write("[" + timestamp + "] [WARN] Erro ao processar dados do passageiro na linha " + i + ": " + e.getMessage() + "\n");
+                        } catch (IOException ex) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                            } catch (IOException e2) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao extrair dados do arquivo: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao extrair dados do arquivo: " + e.getMessage(), e);
         }
 
         logger.info("Extração de passageiros concluída com sucesso: {}", passageirosExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
-                "Extração de passageiros concluída com sucesso. Total de passageiros extraídos: " + passageirosExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de passageiros concluída com sucesso. Total de passageiros extraídos: " + passageirosExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de passageiros concluída com sucesso. Total de passageiros extraídos: " + passageirosExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return passageirosExtraidos;
     }
 
-    public List<PesquisaDeSatisfacao> extrairDadosPesquisaSatisfacao(String nomeArquivo, InputStream arquivo) {
+    public List<PesquisaDeSatisfacao> extrairDadosPesquisaSatisfacao(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de pesquisas de satisfação do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de pesquisas de satisfação do arquivo: " + nomeArquivo);
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de pesquisas de satisfação do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
+
         List<PesquisaDeSatisfacao> pesquisasExtraidas = new ArrayList<>();
         SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -327,31 +455,79 @@ public class ETL {
                         PesquisaDeSatisfacao pesquisa = new PesquisaDeSatisfacao(pesquisaID, null, aeroportoId, mes, data);
                         pesquisasExtraidas.add(pesquisa);
 
-                        inserirLogNoBanco("INFO", nomeArquivo, "Pesquisa Extraída",
-                                "Pesquisa de satisfação extraída com ID=" + pesquisaID + ", Sigla Aeroporto=" + siglaAeroporto);
+                        logger.info("Pesquisa de satisfação extraída com ID={}, Sigla Aeroporto={}", pesquisaID, siglaAeroporto);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Pesquisa de satisfação extraída com ID=" + pesquisaID + ", Sigla Aeroporto=" + siglaAeroporto + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
+
                     } catch (Exception e) {
                         logger.warn("Erro ao processar dados da pesquisa de satisfação na linha {}: {}", i, e.getMessage());
-                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados",
-                                "Erro ao processar dados da pesquisa na linha " + i + ": " + e.getMessage());
+                        try {
+                            writer.write("[" + timestamp + "] [WARN] Erro ao processar dados da pesquisa na linha " + i + ": " + e.getMessage() + "\n");
+                        } catch (IOException ex) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                            } catch (IOException e2) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage(), e);
         }
 
         logger.info("Dados de pesquisas de satisfação extraídos com sucesso: {}", pesquisasExtraidas.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
-                "Extração de pesquisas de satisfação concluída com sucesso. Total de pesquisas extraídas: " + pesquisasExtraidas.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de pesquisas de satisfação concluída com sucesso. Total de pesquisas extraídas: " + pesquisasExtraidas.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return pesquisasExtraidas;
     }
 
-    public List<InformacoesVoo> extrairDadosInformacoesVoo(String nomeArquivo, InputStream arquivo) {
+    public List<InformacoesVoo> extrairDadosInformacoesVoo(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de informações de voo do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de informações de voo do arquivo: " + nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de informações de voo do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
+
         List<InformacoesVoo> informacoesVoosExtraidas = new ArrayList<>();
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
@@ -378,28 +554,82 @@ public class ETL {
 
                         inserirLogNoBanco("INFO", nomeArquivo, "Informações de Voo Extraídas",
                                 "Informações do voo extraídas com ID=" + pesquisaID + ", Aeroporto=" + aeroportoVoo + ", Voo=" + voo);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Informações do voo extraídas com ID=" + pesquisaID + ", Aeroporto=" + aeroportoVoo + ", Voo=" + voo + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
+
                     } catch (Exception e) {
                         logger.warn("Erro ao processar dados de voo na linha {}: {}", i, e.getMessage());
                         inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados",
                                 "Erro ao processar dados de voo na linha " + i + ": " + e.getMessage());
+                        try {
+                            writer.write("[" + timestamp + "] [WARN] Erro ao processar dados de voo na linha " + i + ": " + e.getMessage() + "\n");
+                        } catch (IOException ex) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                            } catch (IOException e2) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao extrair dados do arquivo: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao extrair dados do arquivo: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
+            throw new RuntimeException("Erro ao extrair dados do arquivo: " + e.getMessage(), e);
         }
 
         logger.info("Dados de informações de voo extraídos com sucesso: {}", informacoesVoosExtraidas.size());
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
                 "Extração de informações de voo concluída com sucesso. Total de informações extraídas: " + informacoesVoosExtraidas.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de informações de voo concluída com sucesso. Total de informações extraídas: " + informacoesVoosExtraidas.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return informacoesVoosExtraidas;
     }
 
-    public List<AquisicaoPassagem> extrairDadosAquisicaoPassagem(String nomeArquivo, InputStream arquivo) {
+    public List<AquisicaoPassagem> extrairDadosAquisicaoPassagem(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de aquisições de passagem do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de aquisições de passagem do arquivo: " + nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de aquisições de passagem do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<AquisicaoPassagem> aquisicoesExtraidas = new ArrayList<>();
 
@@ -427,25 +657,67 @@ public class ETL {
                         // Log de sucesso para cada aquisição de passagem extraída
                         inserirLogNoBanco("INFO", nomeArquivo, "Aquisicao de Passagem Extraída",
                                 "Aquisicao de passagem extraída com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Aquisicao de passagem extraída com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de aquisições de passagem extraídos com sucesso: {}", aquisicoesExtraidas.size());
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
                 "Extração de aquisições de passagem concluída com sucesso. Total de aquisições extraídas: " + aquisicoesExtraidas.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de aquisições de passagem concluída com sucesso. Total de aquisições extraídas: " + aquisicoesExtraidas.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return aquisicoesExtraidas;
     }
 
-    public List<NecessidadesEspeciais> extrairDadosNecessidadesEspeciais(String nomeArquivo, InputStream arquivo) {
+    public List<NecessidadesEspeciais> extrairDadosNecessidadesEspeciais(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de Necessidades Especiais do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de necessidades especiais do arquivo: " + nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de necessidades especiais do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<NecessidadesEspeciais> necessidadesEspeciaisExtraidos = new ArrayList<>();
 
@@ -473,25 +745,69 @@ public class ETL {
                         // Log de sucesso para cada necessidade especial extraída
                         inserirLogNoBanco("INFO", nomeArquivo, "Necessidade Especial Extraída",
                                 "Necessidade especial extraída com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Necessidade especial extraída com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de Necessidades Especiais extraídos com sucesso: {}", necessidadesEspeciaisExtraidos.size());
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
                 "Extração de necessidades especiais concluída com sucesso. Total de necessidades extraídas: " + necessidadesEspeciaisExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de necessidades especiais concluída com sucesso. Total de necessidades extraídas: " + necessidadesEspeciaisExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return necessidadesEspeciaisExtraidos;
     }
 
-    public List<Desembarque> extrairDadosDesembarque(String nomeArquivo, InputStream arquivo) {
-        logger.info("Extraindo dados de Desembarque do arquivo: {}", nomeArquivo);
+    public List<Desembarque> extrairDadosDesembarque(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+
+        // Log de início de extração
+        logger.info("Iniciando extração de dados de desembarque do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de desembarque do arquivo: " + nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de desembarque do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<Desembarque> desembarquesExtraidos = new ArrayList<>();
 
@@ -521,25 +837,67 @@ public class ETL {
                         // Log de sucesso para cada desembarque extraído
                         inserirLogNoBanco("INFO", nomeArquivo, "Desembarque Extraído",
                                 "Desembarque extraído com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Desembarque extraído com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
+        // Log de sucesso ao final da extração
         logger.info("Dados de Desembarque extraídos com sucesso: {}", desembarquesExtraidos.size());
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
                 "Extração de desembarques concluída com sucesso. Total de desembarques extraídos: " + desembarquesExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de desembarques concluída com sucesso. Total de desembarques extraídos: " + desembarquesExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return desembarquesExtraidos;
     }
 
-    public List<CheckIn> ExtrairDadosCheckIn(String nomeArquivo, InputStream arquivo) {
-        logger.info("Extraindo dados de check-in do arquivo: {}", nomeArquivo);
-        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de check-in do arquivo: " + nomeArquivo);
+    public List<CheckIn> ExtrairDadosCheckIn(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        logger.info("Iniciando a extração de dados de check-in do arquivo: {}", nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Início da Extração - Iniciando extração de dados de check-in do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<CheckIn> checkInsExtraidos = new ArrayList<>();
 
@@ -551,7 +909,6 @@ public class ETL {
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && checkInsExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
-                    // Supondo que a coluna 0 é onde está o pesquisaID
                     Cell cellPesquisaID = linha.getCell(0);
                     if (cellPesquisaID != null && cellPesquisaID.getCellType() == CellType.NUMERIC) {
                         int pesquisaID = (int) cellPesquisaID.getNumericCellValue();
@@ -566,33 +923,72 @@ public class ETL {
                         Integer cordialidadeFuncionarios = getNumericCellValue(linha.getCell(30));
                         Integer tempoAtendimento = getNumericCellValue(linha.getCell(31));
 
-                        // Cria a CheckIn independentemente de campos nulos
+                        // Cria o CheckIn
                         CheckIn checkIn = new CheckIn(pesquisaID, formaCheckIn, processoCheckIn, tempoEsperaFila, organizacaoFilas,
                                 quantidadeTotensAA, quantidadeBalcoes, cordialidadeFuncionarios, tempoAtendimento);
                         checkInsExtraidos.add(checkIn);
 
                         // Log de sucesso para cada check-in extraído
-                        inserirLogNoBanco("INFO", nomeArquivo, "Check-in Extraído",
-                                "Check-in extraído com ID=" + pesquisaID);
+                        inserirLogNoBanco("INFO", nomeArquivo, "Check-in Extraído", "Check-in extraído com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Check-in extraído com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de check-in extraídos com sucesso: {}", checkInsExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
-                "Extração de check-ins concluída com sucesso. Total de check-ins extraídos: " + checkInsExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de check-ins concluída com sucesso. Total de check-ins extraídos: " + checkInsExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de check-ins concluída com sucesso. Total de check-ins extraídos: " + checkInsExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return checkInsExtraidos;
     }
 
-    public List<InspecaoSeguranca> extrairDadosInspecaoSeguranca(String nomeArquivo, InputStream arquivo) {
+    public List<InspecaoSeguranca> extrairDadosInspecaoSeguranca(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de InspecaoSeguranca do arquivo: {}", nomeArquivo);
-        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de InspecaoSeguranca do arquivo: " + nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de InspecaoSeguranca do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<InspecaoSeguranca> inspecaoSegurancasExtraidos = new ArrayList<>();
 
@@ -622,25 +1018,68 @@ public class ETL {
                         // Log de sucesso para cada InspecaoSeguranca extraída
                         inserirLogNoBanco("INFO", nomeArquivo, "Inspeção de Segurança Extraída",
                                 "Inspeção de segurança extraída com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Inspeção de segurança extraída com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de InspecaoSeguranca extraídos com sucesso: {}", inspecaoSegurancasExtraidos.size());
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
                 "Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: " + inspecaoSegurancasExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: " + inspecaoSegurancasExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return inspecaoSegurancasExtraidos;
     }
 
-    public List<ControleMigratorioAduaneiro> extrairDadosControleMigratorioAduaneiro(String nomeArquivo, InputStream arquivo) {
+    public List<ControleMigratorioAduaneiro> extrairDadosControleMigratorioAduaneiro(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de ControleMigratorioAduaneiro do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: " + nomeArquivo);
+
+        // Escrevendo no arquivo de log
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<ControleMigratorioAduaneiro> controleMigratorioAduaneirosExtraidos = new ArrayList<>();
 
@@ -672,25 +1111,67 @@ public class ETL {
                         // Log de sucesso para cada ControleMigratorioAduaneiro extraído
                         inserirLogNoBanco("INFO", nomeArquivo, "Controle Migratório Aduaneiro Extraído",
                                 "Controle migratório aduaneiro extraído com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Controle migratório aduaneiro extraído com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de ControleMigratorioAduaneiro extraídos com sucesso: {}", controleMigratorioAduaneirosExtraidos.size());
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
                 "Extração de ControleMigratorioAduaneiro concluída com sucesso. Total de controles extraídos: " + controleMigratorioAduaneirosExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de ControleMigratorioAduaneiro concluída com sucesso. Total de controles extraídos: " + controleMigratorioAduaneirosExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return controleMigratorioAduaneirosExtraidos;
     }
 
-    public List<Estabelecimentos> extrairDadosEstabelecimentos(String nomeArquivo, InputStream arquivo) {
+    public List<Estabelecimentos> extrairDadosEstabelecimentos(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de Estabelecimentos do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de Estabelecimentos do arquivo: " + nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de Estabelecimentos do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<Estabelecimentos> estabelecimentosExtraidos = new ArrayList<>();
 
@@ -702,12 +1183,10 @@ public class ETL {
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && estabelecimentosExtraidos.size() < limiteDeLinhas; i++) {
                 Row linha = sheet.getRow(i);
                 if (linha != null) {
-                    // Supondo que a coluna 0 é onde está o pesquisaID
                     Cell cellPesquisaID = linha.getCell(0);
                     if (cellPesquisaID != null && cellPesquisaID.getCellType() == CellType.NUMERIC) {
                         int pesquisaID = (int) cellPesquisaID.getNumericCellValue();
 
-                        // Verificando campos e tratando como nulos
                         String estabelecimentosAlimentacao = getCellValueAsString(linha.getCell(47));
                         Integer quantidadeEstabelecimentosAlimentacao = getNumericCellValue(linha.getCell(48));
                         Integer qualidadeVariedadeOpcoesAlimentacao = getNumericCellValue(linha.getCell(49));
@@ -716,30 +1195,72 @@ public class ETL {
                         Integer quantidadeEstabelecimentosComerciais = getNumericCellValue(linha.getCell(52));
                         Integer qualidadeVariedadeOpcoesComerciais = getNumericCellValue(linha.getCell(53));
 
-                        // Cria o Estabelecimentos independentemente de campos nulos
                         Estabelecimentos estabelecimentos = new Estabelecimentos(pesquisaID, estabelecimentosAlimentacao, quantidadeEstabelecimentosAlimentacao, qualidadeVariedadeOpcoesAlimentacao, relacaoPrecoQualidadeAlimentacao, estabelecimentosComerciais, quantidadeEstabelecimentosComerciais, qualidadeVariedadeOpcoesComerciais);
                         estabelecimentosExtraidos.add(estabelecimentos);
 
-                        // Log de sucesso para cada Estabelecimentos extraído
                         inserirLogNoBanco("INFO", nomeArquivo, "Estabelecimento Extraído", "Estabelecimento extraído com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Estabelecimento extraído com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de Estabelecimentos extraídos com sucesso: {}", estabelecimentosExtraidos.size());
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Estabelecimentos concluída com sucesso. Total de estabelecimentos extraídos: " + estabelecimentosExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de Estabelecimentos concluída com sucesso. Total de estabelecimentos extraídos: " + estabelecimentosExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return estabelecimentosExtraidos;
     }
 
-    public List<Estacionamento> extrairDadosEstacionamento(String nomeArquivo, InputStream arquivo) {
+    public List<Estacionamento> extrairDadosEstacionamento(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de Estacionamento do arquivo: {}", nomeArquivo);
+
+        // Log no banco
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de Estacionamento do arquivo: " + nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de Estacionamento do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<Estacionamento> estacionamentoExtraidos = new ArrayList<>();
 
@@ -768,24 +1289,66 @@ public class ETL {
 
                         // Log de sucesso para cada Estacionamento extraído
                         inserirLogNoBanco("INFO", nomeArquivo, "Estacionamento Extraído", "Estacionamento extraído com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Estacionamento extraído com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de Estacionamento extraídos com sucesso: {}", estacionamentoExtraidos.size());
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Estacionamento concluída com sucesso. Total de estacionamentos extraídos: " + estacionamentoExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de Estacionamento concluída com sucesso. Total de estacionamentos extraídos: " + estacionamentoExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return estacionamentoExtraidos;
     }
 
-    public List<ConfortoAcessibilidade> extrairConfortoAcessibilidade(String nomeArquivo, InputStream arquivo) {
+    public List<ConfortoAcessibilidade> extrairConfortoAcessibilidade(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de ConfortoAcessibilidade do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de ConfortoAcessibilidade do arquivo: " + nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de ConfortoAcessibilidade do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<ConfortoAcessibilidade> confortoAcessibilidadesExtraidos = new ArrayList<>();
 
@@ -830,24 +1393,65 @@ public class ETL {
 
                         // Log de sucesso para cada ConfortoAcessibilidade extraído
                         inserirLogNoBanco("INFO", nomeArquivo, "ConfortoAcessibilidade Extraído", "ConfortoAcessibilidade extraído com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] ConfortoAcessibilidade extraído com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de ConfortoAcessibilidade extraídos com sucesso: {}", confortoAcessibilidadesExtraidos.size());
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de ConfortoAcessibilidade concluída com sucesso. Total de confortos acessibilidade extraídos: " + confortoAcessibilidadesExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de ConfortoAcessibilidade concluída com sucesso. Total de confortos acessibilidade extraídos: " + confortoAcessibilidadesExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return confortoAcessibilidadesExtraidos;
     }
 
-    public List<Sanitarios> extrairDadosSanitarios(String nomeArquivo, InputStream arquivo) {
-        logger.info("Extraindo dados de Sanitarios do arquivo: {}", nomeArquivo);
-        inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de Sanitarios do arquivo: " + nomeArquivo);
+    public List<Sanitarios> extrairDadosSanitarios(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        logger.info("Extraindo dados de Sanitários do arquivo: {}", nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de Sanitários do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         List<Sanitarios> sanitariosExtraidos = new ArrayList<>();
 
@@ -874,25 +1478,69 @@ public class ETL {
                         Sanitarios sanitarios = new Sanitarios(pesquisaID, sanitariosQt, quantidadeBanheiros, limpezaBanheiros, manutencaoGeralSanitarios, limpezaGeralAeroporto);
                         sanitariosExtraidos.add(sanitarios);
 
-                        // Log de sucesso para cada Sanitarios extraído
-                        inserirLogNoBanco("INFO", nomeArquivo, "Sanitarios Extraído", "Sanitarios extraído com ID=" + pesquisaID);
+                        // Log de sucesso para cada Sanitário extraído
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] Sanitários extraído com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
+
+                        inserirLogNoBanco("INFO", nomeArquivo, "Sanitário Extraído", "Sanitário extraído com ID=" + pesquisaID);
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
-        logger.info("Dados de Sanitarios extraídos com sucesso: {}", sanitariosExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Sanitarios concluída com sucesso. Total de sanitários extraídos: " + sanitariosExtraidos.size());
+        logger.info("Dados de Sanitários extraídos com sucesso: {}", sanitariosExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Sanitários concluída com sucesso. Total de sanitários extraídos: " + sanitariosExtraidos.size());
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de Sanitários concluída com sucesso. Total de sanitários extraídos: " + sanitariosExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
 
         return sanitariosExtraidos;
     }
 
-    public List<RestituicaoBagagens> extrairDadosBagagens(String nomeArquivo, InputStream arquivo) {
+    public List<RestituicaoBagagens> extrairDadosBagagens(String nomeArquivo, InputStream arquivo, FileWriter writer) {
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de RestituicaoBagagens do arquivo: {}", nomeArquivo);
+
+        try {
+            writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de RestituicaoBagagens do arquivo: " + nomeArquivo + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de RestituicaoBagagens do arquivo: " + nomeArquivo);
 
         List<RestituicaoBagagens> restituicaoBagagensExtraidos = new ArrayList<>();
@@ -922,21 +1570,50 @@ public class ETL {
 
                         // Log de sucesso para cada RestituicaoBagagens extraído
                         inserirLogNoBanco("INFO", nomeArquivo, "RestituicaoBagagens Extraído", "RestituicaoBagagens extraído com ID=" + pesquisaID);
+                        try {
+                            writer.write("[" + timestamp + "] [INFO] RestituicaoBagagens extraído com ID=" + pesquisaID + "\n");
+                        } catch (IOException e) {
+                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            try {
+                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                            } catch (IOException ex) {
+                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
+                } catch (IOException e2) {
+                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
+                }
+            }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
         logger.info("Dados de RestituicaoBagagens extraídos com sucesso: {}", restituicaoBagagensExtraidos.size());
+        try {
+            writer.write("[" + timestamp + "] [INFO] Extração de RestituicaoBagagens concluída com sucesso. Total de RestituicaoBagagens extraídos: " + restituicaoBagagensExtraidos.size() + "\n");
+        } catch (IOException e) {
+            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            try {
+                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+            } catch (IOException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            }
+        }
         inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de RestituicaoBagagens concluída com sucesso. Total de RestituicaoBagagens extraídos: " + restituicaoBagagensExtraidos.size());
 
         return restituicaoBagagensExtraidos;
     }
-
 
     //INSERÇÃO NO BANCO DE DADOS
     public void inserirPesquisasNoBanco(List<PesquisaDeSatisfacao> pesquisas) {
@@ -1706,5 +2383,4 @@ public class ETL {
 
         conec.update(sql, status, arquivoLido, titulo, descricao);
     }
-
 }

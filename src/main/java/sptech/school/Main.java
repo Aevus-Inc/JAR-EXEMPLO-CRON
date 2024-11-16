@@ -1,5 +1,9 @@
 package sptech.school;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Arrays;
 import org.slf4j.Logger;
@@ -11,17 +15,35 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
-        logger.info("Iniciando o processo de ETL...");
-        ETL etlAevus = new ETL();
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 
-        S3Client conexS3 = new S3Provider().getS3Client();
+        try (FileWriter writer = new FileWriter("log_erro_etl.txt", true)) {
+            logger.info("Iniciando o processo de ETL...");
+            try {
+                writer.write("[" + timestamp + "] [INFO] Iniciando o processo de ETL...\n");
+            } catch (IOException e) {
+                logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            }
 
-        // Lista dos arquivos a serem processados
-        List<String> arquivos = Arrays.asList("2023-01tri.xlsx", "2023-02tri.xlsx", "2023-03tri.xlsx", "2023-04tri.xlsx", "2024-01tri.xlsx", "2024-02tri.xlsx");
+            ETL etlAevus = new ETL();
+            S3Client conexS3 = new S3Provider().getS3Client();
 
-        // Processa todos os arquivos na lista
-        etlAevus.processarArquivosS3(arquivos, conexS3);
+            List<String> arquivos = Arrays.asList("2023-01tri.xlsx");
 
-        logger.info("Processo de ETL finalizado.");
+            try {
+                etlAevus.processarArquivosS3(arquivos, conexS3);
+                logger.info("Processo de ETL finalizado.");
+                writer.write("[" + timestamp + "] [INFO] Processo de ETL finalizado.\n");
+            } catch (Exception e) {
+                logger.error("Erro durante o processo de ETL: {}", e.getMessage());
+                try {
+                    writer.write("[" + timestamp + "] [ERROR] Erro durante o processo de ETL: " + e.getMessage() + "\n");
+                } catch (IOException ex) {
+                    logger.error("Erro ao tentar escrever no arquivo de log: {}", ex.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            logger.error("Erro ao abrir o arquivo de log: {}", e.getMessage());
+        }
     }
 }
