@@ -10,19 +10,10 @@ public class Aeroporto {
     );
 
     private String siglaAeroporto;
-    private Integer classificacao;
 
     public Aeroporto(String siglaAeroporto, Integer classificacao) {
         this.siglaAeroporto = siglaAeroporto;
-        this.classificacao = classificacao;
-    }
 
-    public Integer getClassificacao() {
-        return classificacao;
-    }
-
-    public void setClassificacao(Integer classificacao) {
-        this.classificacao = classificacao;
     }
 
     public Aeroporto(String siglaAeroporto) {
