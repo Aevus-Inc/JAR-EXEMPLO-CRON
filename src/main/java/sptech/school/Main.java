@@ -21,24 +21,30 @@ public class Main {
             logger.info("Iniciando o processo de ETL...");
             try {
                 writer.write("[" + timestamp + "] [INFO] Iniciando o processo de ETL...\n");
+                Slack.sendFormattedMessage("INFO", "Iniciando o processo de ETL...\n");
             } catch (IOException e) {
                 logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
 
             ETL etlAevus = new ETL();
             S3Client conexS3 = new S3Provider().getS3Client();
 
-            List<String> arquivos = Arrays.asList("2023-01tri.xlsx");
+            List<String> arquivos = Arrays.asList("2023-01tri.xlsx", "2023-02tri.xlsx");
 
             try {
                 etlAevus.processarArquivosS3(arquivos, conexS3);
                 logger.info("Processo de ETL finalizado.");
                 writer.write("[" + timestamp + "] [INFO] Processo de ETL finalizado.\n");
+                Slack.sendFormattedMessage("INFO", "Processo de ETL finalizado.");
             } catch (Exception e) {
                 logger.error("Erro durante o processo de ETL: {}", e.getMessage());
                 try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro durante o processo de ETL: " + e.getMessage() + "\n");
-                } catch (IOException ex) {
+                    String errorMessage = "[" + timestamp + "] [ERROR] Erro durante o processo de ETL: " + e.getMessage();
+                    writer.write(errorMessage + "\n");
+                    Slack.sendFormattedMessage("ERROR", errorMessage);
+                } catch (IOException | InterruptedException ex) {
                     logger.error("Erro ao tentar escrever no arquivo de log: {}", ex.getMessage());
                 }
             }

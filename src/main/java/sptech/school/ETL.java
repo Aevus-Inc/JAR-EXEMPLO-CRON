@@ -1,5 +1,6 @@
 package sptech.school;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -82,15 +83,24 @@ public class ETL {
                     logger.info("Arquivo processado com sucesso: {}", arquivo);
                     inserirLogNoBanco("INFO", arquivo, "Processamento do arquivo", "Arquivo processado com sucesso");
 
+                    JSONObject json = new JSONObject();
+                    json.put("text", "✅ *Arquivo processado com sucesso!*\nArquivo: " + arquivo);
+                    Slack.sendMessage(json);
+
                 } catch (IOException | S3Exception e) {
                     String errorMsg = "Erro ao processar o arquivo " + arquivo + ": " + e.getMessage();
                     writer.write("[" + timestamp + "] [ERROR] " + errorMsg + "\n");
                     logger.error(errorMsg);
                     inserirLogNoBanco("ERROR", arquivo, "Erro no processamento", e.getMessage());
+
+                    JSONObject json = new JSONObject();
+                    json.put("text", "⚠️ *Erro no ETL* ⚠️\nArquivo: " + arquivo + "\nErro: " + e.getMessage());
+                    Slack.sendMessage(json);
+
                     logger.info("Continuando para o próximo arquivo...");
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
         }
 
@@ -237,8 +247,9 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Extraindo dados de aeroportos do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            Slack.sendFormattedMessage("INFO", "Iniciando a extração de dados de aeroportos do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         List<Aeroporto> aeroportosExtraidos = new ArrayList<>();
@@ -266,8 +277,11 @@ public class ETL {
                         logger.warn("Erro ao processar dados do aeroporto na linha {}: {}", i, e.getMessage());
                         try {
                             writer.write("[" + timestamp + "] [WARN] Erro ao processar dados do aeroporto na linha " + i + ": " + e.getMessage() + "\n");
+                            Slack.sendFormattedMessage("WARN", "Erro ao processar dados do aeroporto na linha " + i + ": " + e.getMessage());
                         } catch (IOException ex) {
                             logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                        } catch (InterruptedException ex) {
+                            throw new RuntimeException(ex);
                         }
                     }
                 }
@@ -276,8 +290,11 @@ public class ETL {
             logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
+                Slack.sendFormattedMessage("ERROR", "Erro ao processar arquivo Excel: " + e.getMessage());
             } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
             }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
@@ -285,8 +302,11 @@ public class ETL {
         logger.info("Dados de aeroportos extraídos com sucesso: {}", aeroportosExtraidos.size());
         try {
             writer.write("[" + timestamp + "] [INFO] Dados de aeroportos extraídos com sucesso: " + aeroportosExtraidos.size() + "\n");
+            Slack.sendFormattedMessage("INFO", "Dados de aeroportos extraídos com sucesso: " + aeroportosExtraidos.size());
         } catch (IOException e) {
             logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
         return aeroportosExtraidos;
@@ -303,8 +323,11 @@ public class ETL {
             logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
+                Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de passageiros do arquivo: " + nomeArquivo);
             } catch (IOException ex) {
                 logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
             }
         }
 
@@ -356,62 +379,49 @@ public class ETL {
                                 jaEmbarcouDesembarcouAntes, antecedencia, tempoEspera, comentariosAdicionais);
                         passageirosExtraidos.add(passageiro);
 
-                        logger.info("Passageiro extraído: Nacionalidade={}, Gênero={}", nacionalidade, genero);
-                        inserirLogNoBanco("INFO", nomeArquivo, "Passageiro Extraído", "Passageiro extraído: Nacionalidade=" + nacionalidade + ", Gênero=" + genero);
+                        String mensagem = "Passageiro extraído: Nacionalidade=" + nacionalidade + ", Gênero=" + genero;
+                        logger.info(mensagem);
+                        inserirLogNoBanco("INFO", nomeArquivo, "Passageiro Extraído", mensagem);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Passageiro extraído: Nacionalidade=" + nacionalidade + ", Gênero=" + genero + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagem + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
 
                     } catch (Exception e) {
-                        logger.warn("Erro ao processar dados do passageiro na linha {}: {}", i, e.getMessage());
-                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados", "Erro ao processar dados do passageiro na linha " + i + ": " + e.getMessage());
+                        String mensagemErro = "Erro ao processar dados do passageiro na linha " + i + ": " + e.getMessage();
+                        logger.warn(mensagemErro);
+                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados", mensagemErro);
                         try {
-                            writer.write("[" + timestamp + "] [WARN] Erro ao processar dados do passageiro na linha " + i + ": " + e.getMessage() + "\n");
-                        } catch (IOException ex) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                            } catch (IOException e2) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                            }
+                            writer.write("[" + timestamp + "] [WARN] " + mensagemErro + "\n");
+                            Slack.sendFormattedMessage("WARN", mensagemErro);
+                        } catch (IOException | InterruptedException ex) {
+                            logger.error("Erro ao escrever no log ou enviar mensagem para o Slack: {}", ex.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao extrair dados do arquivo: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo: " + e.getMessage());
+            String mensagemErro = "Erro ao processar arquivo: " + e.getMessage();
+            logger.error(mensagemErro);
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", mensagemErro);
             try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                writer.write("[" + timestamp + "] [ERROR] " + mensagemErro + "\n");
+                Slack.sendFormattedMessage("ERROR", mensagemErro);
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
-            throw new RuntimeException("Erro ao extrair dados do arquivo: " + e.getMessage(), e);
+            throw new RuntimeException(mensagemErro, e);
         }
 
-        logger.info("Extração de passageiros concluída com sucesso: {}", passageirosExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de passageiros concluída com sucesso. Total de passageiros extraídos: " + passageirosExtraidos.size());
+        String mensagemSucesso = "Extração de passageiros concluída com sucesso. Total de passageiros extraídos: " + passageirosExtraidos.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de passageiros concluída com sucesso. Total de passageiros extraídos: " + passageirosExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return passageirosExtraidos;
@@ -421,15 +431,12 @@ public class ETL {
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         logger.info("Extraindo dados de pesquisas de satisfação do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de pesquisas de satisfação do arquivo: " + nomeArquivo);
+
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de pesquisas de satisfação do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de pesquisas de satisfação do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem ao Slack: {}", e.getMessage());
         }
 
         List<PesquisaDeSatisfacao> pesquisasExtraidas = new ArrayList<>();
@@ -451,63 +458,54 @@ public class ETL {
                         String data = formatoData.format(row.getCell(3).getDateCellValue()); // Coluna D
                         Integer classificacao = getCellValueAsInteger(row.getCell(83));
 
-                        Integer aeroportoId = obterAeroportoIdPorSigla(siglaAeroporto); // Obtém ID pelo método
+                        Integer aeroportoId = obterAeroportoIdPorSigla(siglaAeroporto);
 
                         PesquisaDeSatisfacao pesquisa = new PesquisaDeSatisfacao(pesquisaID, null, aeroportoId, mes, data, classificacao);
                         pesquisasExtraidas.add(pesquisa);
 
-                        logger.info("Pesquisa de satisfação extraída com ID={}, Sigla Aeroporto={}", pesquisaID, siglaAeroporto);
+                        String mensagemSucesso = "Pesquisa de satisfação extraída com ID=" + pesquisaID + ", Sigla Aeroporto=" + siglaAeroporto;
+                        logger.info(mensagemSucesso);
+                        inserirLogNoBanco("INFO", nomeArquivo, "Pesquisa Extraída", mensagemSucesso);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Pesquisa de satisfação extraída com ID=" + pesquisaID + ", Sigla Aeroporto=" + siglaAeroporto + ", Classificação=" + classificacao + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no log ou enviar mensagem ao Slack: {}", e.getMessage());
                         }
 
                     } catch (Exception e) {
-                        logger.warn("Erro ao processar dados da pesquisa de satisfação na linha {}: {}", i, e.getMessage());
+                        String mensagemErro = "Erro ao processar dados da pesquisa de satisfação na linha " + i + ": " + e.getMessage();
+                        logger.warn(mensagemErro);
+                        inserirLogNoBanco("WARN", nomeArquivo, "Erro de Dados", mensagemErro);
                         try {
-                            writer.write("[" + timestamp + "] [WARN] Erro ao processar dados da pesquisa na linha " + i + ": " + e.getMessage() + "\n");
-                        } catch (IOException ex) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                            } catch (IOException e2) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                            }
+                            writer.write("[" + timestamp + "] [WARN] " + mensagemErro + "\n");
+                            Slack.sendFormattedMessage("WARN", mensagemErro);
+                        } catch (IOException | InterruptedException ex) {
+                            logger.error("Erro ao escrever no log ou enviar mensagem ao Slack: {}", ex.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
+            String mensagemErro = "Erro ao processar arquivo Excel: " + e.getMessage();
+            logger.error(mensagemErro);
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", mensagemErro);
             try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                writer.write("[" + timestamp + "] [ERROR] " + mensagemErro + "\n");
+                Slack.sendFormattedMessage("ERROR", mensagemErro);
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no log ou enviar mensagem ao Slack: {}", ex.getMessage());
             }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage(), e);
         }
 
-        logger.info("Dados de pesquisas de satisfação extraídos com sucesso: {}", pesquisasExtraidas.size());
+        String mensagemFinal = "Extração de pesquisas de satisfação concluída com sucesso. Total de pesquisas extraídas: " + pesquisasExtraidas.size();
+        logger.info(mensagemFinal);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemFinal);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de pesquisas de satisfação concluída com sucesso. Total de pesquisas extraídas: " + pesquisasExtraidas.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemFinal + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemFinal);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no log ou enviar mensagem ao Slack: {}", e.getMessage());
         }
 
         return pesquisasExtraidas;
@@ -520,13 +518,9 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de informações de voo do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de informações de voo do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         List<InformacoesVoo> informacoesVoosExtraidas = new ArrayList<>();
@@ -553,64 +547,49 @@ public class ETL {
                         InformacoesVoo informacoesVoo = new InformacoesVoo(pesquisaID, processo, aeroportoVoo, terminal, portao, tipoVoo, ciaAerea, voo, conexao);
                         informacoesVoosExtraidas.add(informacoesVoo);
 
-                        inserirLogNoBanco("INFO", nomeArquivo, "Informações de Voo Extraídas",
-                                "Informações do voo extraídas com ID=" + pesquisaID + ", Aeroporto=" + aeroportoVoo + ", Voo=" + voo);
+                        String mensagem = "Informações do voo extraídas: ID=" + pesquisaID + ", Aeroporto=" + aeroportoVoo + ", Voo=" + voo;
+                        logger.info(mensagem);
+                        inserirLogNoBanco("INFO", nomeArquivo, "Informações de Voo Extraídas", mensagem);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Informações do voo extraídas com ID=" + pesquisaID + ", Aeroporto=" + aeroportoVoo + ", Voo=" + voo + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagem + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
 
                     } catch (Exception e) {
-                        logger.warn("Erro ao processar dados de voo na linha {}: {}", i, e.getMessage());
-                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados",
-                                "Erro ao processar dados de voo na linha " + i + ": " + e.getMessage());
+                        String mensagemErro = "Erro ao processar dados de voo na linha " + i + ": " + e.getMessage();
+                        logger.warn(mensagemErro);
+                        inserirLogNoBanco("WARN", nomeArquivo, "Dados Ignorados", mensagemErro);
                         try {
-                            writer.write("[" + timestamp + "] [WARN] Erro ao processar dados de voo na linha " + i + ": " + e.getMessage() + "\n");
-                        } catch (IOException ex) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                            } catch (IOException e2) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                            }
+                            writer.write("[" + timestamp + "] [WARN] " + mensagemErro + "\n");
+                            Slack.sendFormattedMessage("WARN", mensagemErro);
+                        } catch (IOException | InterruptedException ex) {
+                            logger.error("Erro ao escrever no log ou enviar mensagem para o Slack: {}", ex.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao extrair dados do arquivo: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao extrair dados do arquivo: " + e.getMessage());
+            String mensagemErro = "Erro ao processar arquivo: " + e.getMessage();
+            logger.error(mensagemErro);
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", mensagemErro);
             try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                writer.write("[" + timestamp + "] [ERROR] " + mensagemErro + "\n");
+                Slack.sendFormattedMessage("ERROR", mensagemErro);
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
-            throw new RuntimeException("Erro ao extrair dados do arquivo: " + e.getMessage(), e);
+            throw new RuntimeException(mensagemErro, e);
         }
 
-        logger.info("Dados de informações de voo extraídos com sucesso: {}", informacoesVoosExtraidas.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
-                "Extração de informações de voo concluída com sucesso. Total de informações extraídas: " + informacoesVoosExtraidas.size());
+        String mensagemSucesso = "Extração de informações de voo concluída com sucesso. Total de informações extraídas: " + informacoesVoosExtraidas.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de informações de voo concluída com sucesso. Total de informações extraídas: " + informacoesVoosExtraidas.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return informacoesVoosExtraidas;
@@ -623,11 +602,13 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de aquisições de passagem do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de aquisições de passagem do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
             logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
+                Slack.sendFormattedMessage("ERROR", "Erro ao escrever no arquivo de log: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
                 logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
             }
         }
@@ -656,15 +637,16 @@ public class ETL {
                         aquisicoesExtraidas.add(aquisicao);
 
                         // Log de sucesso para cada aquisição de passagem extraída
-                        inserirLogNoBanco("INFO", nomeArquivo, "Aquisicao de Passagem Extraída",
-                                "Aquisicao de passagem extraída com ID=" + pesquisaID);
+                        String mensagemSucesso = "Aquisicao de passagem extraída com ID=" + pesquisaID;
+                        inserirLogNoBanco("INFO", nomeArquivo, "Aquisicao de Passagem Extraída", mensagemSucesso);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Aquisicao de passagem extraída com ID=" + pesquisaID + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
                         } catch (IOException e) {
                             logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
                             try {
                                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
+                                Slack.sendFormattedMessage("ERROR", "Erro ao escrever no arquivo de log: " + e.getMessage());
+                            } catch (IOException | InterruptedException ex) {
                                 logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
                             }
                         }
@@ -676,27 +658,31 @@ public class ETL {
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
+                Slack.sendFormattedMessage("ERROR", "Erro ao processar arquivo Excel: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
                 logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
                 try {
                     writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
+                    Slack.sendFormattedMessage("ERROR", "Erro ao escrever no arquivo de log: " + ex.getMessage());
+                } catch (IOException | InterruptedException e2) {
                     logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
                 }
             }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
-        logger.info("Dados de aquisições de passagem extraídos com sucesso: {}", aquisicoesExtraidas.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
-                "Extração de aquisições de passagem concluída com sucesso. Total de aquisições extraídas: " + aquisicoesExtraidas.size());
+        String mensagemFinal = "Dados de aquisições de passagem extraídos com sucesso: " + aquisicoesExtraidas.size();
+        logger.info(mensagemFinal);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemFinal);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de aquisições de passagem concluída com sucesso. Total de aquisições extraídas: " + aquisicoesExtraidas.size() + "\n");
-        } catch (IOException e) {
+            writer.write("[" + timestamp + "] [INFO] " + mensagemFinal + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemFinal);
+        } catch (IOException | InterruptedException e) {
             logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
+                Slack.sendFormattedMessage("ERROR", "Erro ao escrever no arquivo de log: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
                 logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
             }
         }
@@ -711,13 +697,9 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de necessidades especiais do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de necessidades especiais do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         List<NecessidadesEspeciais> necessidadesEspeciaisExtraidos = new ArrayList<>();
@@ -744,49 +726,37 @@ public class ETL {
                         necessidadesEspeciaisExtraidos.add(necessidadesEspeciais);
 
                         // Log de sucesso para cada necessidade especial extraída
-                        inserirLogNoBanco("INFO", nomeArquivo, "Necessidade Especial Extraída",
-                                "Necessidade especial extraída com ID=" + pesquisaID);
+                        String mensagem = "Necessidade especial extraída com ID=" + pesquisaID;
+                        inserirLogNoBanco("INFO", nomeArquivo, "Necessidade Especial Extraída", mensagem);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Necessidade especial extraída com ID=" + pesquisaID + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagem + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            String mensagemErro = "Erro ao processar arquivo Excel: " + e.getMessage();
+            logger.error(mensagemErro);
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", mensagemErro);
             try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                writer.write("[" + timestamp + "] [ERROR] " + mensagemErro + "\n");
+                Slack.sendFormattedMessage("ERROR", mensagemErro);
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
-            throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
+            throw new RuntimeException(mensagemErro);
         }
 
-        logger.info("Dados de Necessidades Especiais extraídos com sucesso: {}", necessidadesEspeciaisExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
-                "Extração de necessidades especiais concluída com sucesso. Total de necessidades extraídas: " + necessidadesEspeciaisExtraidos.size());
+        String mensagemSucesso = "Dados de Necessidades Especiais extraídos com sucesso: " + necessidadesEspeciaisExtraidos.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de necessidades especiais concluída com sucesso. Total de necessidades extraídas: " + necessidadesEspeciaisExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return necessidadesEspeciaisExtraidos;
@@ -798,11 +768,11 @@ public class ETL {
         // Log de início de extração
         logger.info("Iniciando extração de dados de desembarque do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de desembarque do arquivo: " + nomeArquivo);
-
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de desembarque do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de desembarque do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
             } catch (IOException ex) {
@@ -836,12 +806,12 @@ public class ETL {
                         desembarquesExtraidos.add(desembarque);
 
                         // Log de sucesso para cada desembarque extraído
-                        inserirLogNoBanco("INFO", nomeArquivo, "Desembarque Extraído",
-                                "Desembarque extraído com ID=" + pesquisaID);
+                        String logMensagem = "Desembarque extraído com ID=" + pesquisaID;
+                        inserirLogNoBanco("INFO", nomeArquivo, "Desembarque Extraído", logMensagem);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Desembarque extraído com ID=" + pesquisaID + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + logMensagem + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                             try {
                                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
                             } catch (IOException ex) {
@@ -856,8 +826,9 @@ public class ETL {
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
+                Slack.sendFormattedMessage("ERROR", "Erro ao processar arquivo Excel: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
                 try {
                     writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
                 } catch (IOException e2) {
@@ -868,13 +839,14 @@ public class ETL {
         }
 
         // Log de sucesso ao final da extração
-        logger.info("Dados de Desembarque extraídos com sucesso: {}", desembarquesExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
-                "Extração de desembarques concluída com sucesso. Total de desembarques extraídos: " + desembarquesExtraidos.size());
+        String mensagemSucesso = "Dados de Desembarque extraídos com sucesso: " + desembarquesExtraidos.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de desembarques concluída com sucesso. Total de desembarques extraídos: " + desembarquesExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
             } catch (IOException ex) {
@@ -891,11 +863,13 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Início da Extração - Iniciando extração de dados de check-in do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
+            Slack.sendFormattedMessage("INFO", "Início da extração de dados de check-in do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
             logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
+                Slack.sendFormattedMessage("ERROR", "Erro ao escrever no arquivo de log: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
                 logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
             }
         }
@@ -930,16 +904,12 @@ public class ETL {
                         checkInsExtraidos.add(checkIn);
 
                         // Log de sucesso para cada check-in extraído
-                        inserirLogNoBanco("INFO", nomeArquivo, "Check-in Extraído", "Check-in extraído com ID=" + pesquisaID);
+                        String mensagemSucesso = "Check-in extraído com ID=" + pesquisaID;
+                        inserirLogNoBanco("INFO", nomeArquivo, "Check-in Extraído", mensagemSucesso);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Check-in extraído com ID=" + pesquisaID + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
                     }
                 }
@@ -949,28 +919,21 @@ public class ETL {
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                Slack.sendFormattedMessage("ERROR", "Erro ao processar arquivo Excel: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
-        logger.info("Dados de check-in extraídos com sucesso: {}", checkInsExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de check-ins concluída com sucesso. Total de check-ins extraídos: " + checkInsExtraidos.size());
+        String mensagemFinal = "Dados de check-in extraídos com sucesso: " + checkInsExtraidos.size();
+        logger.info(mensagemFinal);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemFinal);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de check-ins concluída com sucesso. Total de check-ins extraídos: " + checkInsExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemFinal + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemFinal);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return checkInsExtraidos;
@@ -982,12 +945,14 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de InspecaoSeguranca do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de InspecaoSeguranca do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                Slack.sendFormattedMessage("ERROR", "Erro ao escrever no arquivo de log: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
         }
 
@@ -1017,49 +982,38 @@ public class ETL {
                         inspecaoSegurancasExtraidos.add(inspecaoSeguranca);
 
                         // Log de sucesso para cada InspecaoSeguranca extraída
-                        inserirLogNoBanco("INFO", nomeArquivo, "Inspeção de Segurança Extraída",
-                                "Inspeção de segurança extraída com ID=" + pesquisaID);
+                        String mensagem = "Inspeção de segurança extraída com ID=" + pesquisaID;
+                        logger.info(mensagem);
+                        inserirLogNoBanco("INFO", nomeArquivo, "Inspeção de Segurança Extraída", mensagem);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Inspeção de segurança extraída com ID=" + pesquisaID + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagem + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            String mensagemErro = "Erro ao processar arquivo Excel: " + e.getMessage();
+            logger.error(mensagemErro);
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", mensagemErro);
             try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                writer.write("[" + timestamp + "] [ERROR] " + mensagemErro + "\n");
+                Slack.sendFormattedMessage("ERROR", mensagemErro);
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
-            throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
+            throw new RuntimeException(mensagemErro, e);
         }
 
-        logger.info("Dados de InspecaoSeguranca extraídos com sucesso: {}", inspecaoSegurancasExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
-                "Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: " + inspecaoSegurancasExtraidos.size());
+        String mensagemSucesso = "Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: " + inspecaoSegurancasExtraidos.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de InspecaoSeguranca concluída com sucesso. Total de inspeções extraídas: " + inspecaoSegurancasExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return inspecaoSegurancasExtraidos;
@@ -1070,16 +1024,12 @@ public class ETL {
         logger.info("Extraindo dados de ControleMigratorioAduaneiro do arquivo: {}", nomeArquivo);
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: " + nomeArquivo);
 
-        // Escrevendo no arquivo de log
+        // Enviar mensagem para o Slack
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de ControleMigratorioAduaneiro do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         List<ControleMigratorioAduaneiro> controleMigratorioAduaneirosExtraidos = new ArrayList<>();
@@ -1110,49 +1060,38 @@ public class ETL {
                         controleMigratorioAduaneirosExtraidos.add(controleMigratorioAduaneiro);
 
                         // Log de sucesso para cada ControleMigratorioAduaneiro extraído
-                        inserirLogNoBanco("INFO", nomeArquivo, "Controle Migratório Aduaneiro Extraído",
-                                "Controle migratório aduaneiro extraído com ID=" + pesquisaID);
+                        String mensagem = "Controle migratório aduaneiro extraído com ID=" + pesquisaID;
+                        logger.info(mensagem);
+                        inserirLogNoBanco("INFO", nomeArquivo, "Controle Migratório Aduaneiro Extraído", mensagem);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Controle migratório aduaneiro extraído com ID=" + pesquisaID + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagem + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            String mensagemErro = "Erro ao processar arquivo Excel: " + e.getMessage();
+            logger.error(mensagemErro);
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", mensagemErro);
             try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                writer.write("[" + timestamp + "] [ERROR] " + mensagemErro + "\n");
+                Slack.sendFormattedMessage("ERROR", mensagemErro);
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
-            throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
+            throw new RuntimeException(mensagemErro, e);
         }
 
-        logger.info("Dados de ControleMigratorioAduaneiro extraídos com sucesso: {}", controleMigratorioAduaneirosExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída",
-                "Extração de ControleMigratorioAduaneiro concluída com sucesso. Total de controles extraídos: " + controleMigratorioAduaneirosExtraidos.size());
+        String mensagemSucesso = "Dados de ControleMigratorioAduaneiro extraídos com sucesso. Total de controles extraídos: " + controleMigratorioAduaneirosExtraidos.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de ControleMigratorioAduaneiro concluída com sucesso. Total de controles extraídos: " + controleMigratorioAduaneirosExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return controleMigratorioAduaneirosExtraidos;
@@ -1165,13 +1104,9 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de Estabelecimentos do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de Estabelecimentos do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         List<Estabelecimentos> estabelecimentosExtraidos = new ArrayList<>();
@@ -1199,47 +1134,37 @@ public class ETL {
                         Estabelecimentos estabelecimentos = new Estabelecimentos(pesquisaID, estabelecimentosAlimentacao, quantidadeEstabelecimentosAlimentacao, qualidadeVariedadeOpcoesAlimentacao, relacaoPrecoQualidadeAlimentacao, estabelecimentosComerciais, quantidadeEstabelecimentosComerciais, qualidadeVariedadeOpcoesComerciais);
                         estabelecimentosExtraidos.add(estabelecimentos);
 
-                        inserirLogNoBanco("INFO", nomeArquivo, "Estabelecimento Extraído", "Estabelecimento extraído com ID=" + pesquisaID);
+                        String mensagem = "Estabelecimento extraído com ID=" + pesquisaID;
+                        inserirLogNoBanco("INFO", nomeArquivo, "Estabelecimento Extraído", mensagem);
                         try {
                             writer.write("[" + timestamp + "] [INFO] Estabelecimento extraído com ID=" + pesquisaID + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            String mensagemErro = "Erro ao processar arquivo Excel: " + e.getMessage();
+            logger.error(mensagemErro);
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", mensagemErro);
             try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                writer.write("[" + timestamp + "] [ERROR] " + mensagemErro + "\n");
+                Slack.sendFormattedMessage("ERROR", mensagemErro);
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
-            throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
+            throw new RuntimeException(mensagemErro, e);
         }
 
-        logger.info("Dados de Estabelecimentos extraídos com sucesso: {}", estabelecimentosExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Estabelecimentos concluída com sucesso. Total de estabelecimentos extraídos: " + estabelecimentosExtraidos.size());
+        String mensagemSucesso = "Dados de Estabelecimentos extraídos com sucesso. Total de estabelecimentos extraídos: " + estabelecimentosExtraidos.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de Estabelecimentos concluída com sucesso. Total de estabelecimentos extraídos: " + estabelecimentosExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return estabelecimentosExtraidos;
@@ -1251,16 +1176,11 @@ public class ETL {
 
         // Log no banco
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de Estacionamento do arquivo: " + nomeArquivo);
-
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de Estacionamento do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de Estacionamento do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         List<Estacionamento> estacionamentoExtraidos = new ArrayList<>();
@@ -1289,47 +1209,38 @@ public class ETL {
                         estacionamentoExtraidos.add(estacionamento);
 
                         // Log de sucesso para cada Estacionamento extraído
-                        inserirLogNoBanco("INFO", nomeArquivo, "Estacionamento Extraído", "Estacionamento extraído com ID=" + pesquisaID);
+                        String mensagem = "Estacionamento extraído com ID=" + pesquisaID;
+                        logger.info(mensagem);
+                        inserirLogNoBanco("INFO", nomeArquivo, "Estacionamento Extraído", mensagem);
                         try {
                             writer.write("[" + timestamp + "] [INFO] Estacionamento extraído com ID=" + pesquisaID + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            String mensagemErro = "Erro ao processar arquivo Excel: " + e.getMessage();
+            logger.error(mensagemErro);
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", mensagemErro);
             try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                writer.write("[" + timestamp + "] [ERROR] " + mensagemErro + "\n");
+                Slack.sendFormattedMessage("ERROR", mensagemErro);
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
-            throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
+            throw new RuntimeException(mensagemErro, e);
         }
 
-        logger.info("Dados de Estacionamento extraídos com sucesso: {}", estacionamentoExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Estacionamento concluída com sucesso. Total de estacionamentos extraídos: " + estacionamentoExtraidos.size());
+        String mensagemSucesso = "Dados de Estacionamento extraídos com sucesso: " + estacionamentoExtraidos.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
             writer.write("[" + timestamp + "] [INFO] Extração de Estacionamento concluída com sucesso. Total de estacionamentos extraídos: " + estacionamentoExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return estacionamentoExtraidos;
@@ -1342,13 +1253,9 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de ConfortoAcessibilidade do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de ConfortoAcessibilidade do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         List<ConfortoAcessibilidade> confortoAcessibilidadesExtraidos = new ArrayList<>();
@@ -1393,47 +1300,37 @@ public class ETL {
                         confortoAcessibilidadesExtraidos.add(confortoAcessibilidade);
 
                         // Log de sucesso para cada ConfortoAcessibilidade extraído
-                        inserirLogNoBanco("INFO", nomeArquivo, "ConfortoAcessibilidade Extraído", "ConfortoAcessibilidade extraído com ID=" + pesquisaID);
+                        String mensagem = "ConfortoAcessibilidade extraído com ID=" + pesquisaID;
+                        inserirLogNoBanco("INFO", nomeArquivo, "ConfortoAcessibilidade Extraído", mensagem);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] ConfortoAcessibilidade extraído com ID=" + pesquisaID + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagem + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Erro ao processar arquivo Excel: {}", e.getMessage());
-            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
+            String mensagemErro = "Erro ao processar arquivo Excel: " + e.getMessage();
+            logger.error(mensagemErro);
+            inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", mensagemErro);
             try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                writer.write("[" + timestamp + "] [ERROR] " + mensagemErro + "\n");
+                Slack.sendFormattedMessage("ERROR", mensagemErro);
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
-            throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
+            throw new RuntimeException(mensagemErro, e);
         }
 
-        logger.info("Dados de ConfortoAcessibilidade extraídos com sucesso: {}", confortoAcessibilidadesExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de ConfortoAcessibilidade concluída com sucesso. Total de confortos acessibilidade extraídos: " + confortoAcessibilidadesExtraidos.size());
+        String mensagemSucesso = "Dados de ConfortoAcessibilidade extraídos com sucesso: " + confortoAcessibilidadesExtraidos.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de ConfortoAcessibilidade concluída com sucesso. Total de confortos acessibilidade extraídos: " + confortoAcessibilidadesExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return confortoAcessibilidadesExtraidos;
@@ -1445,11 +1342,13 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de Sanitários do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de Sanitários do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
             logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
+                Slack.sendFormattedMessage("ERROR", "Erro ao escrever no arquivo de log: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
                 logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
             }
         }
@@ -1480,18 +1379,20 @@ public class ETL {
                         sanitariosExtraidos.add(sanitarios);
 
                         // Log de sucesso para cada Sanitário extraído
+                        String mensagem = "Sanitário extraído com ID=" + pesquisaID;
                         try {
-                            writer.write("[" + timestamp + "] [INFO] Sanitários extraído com ID=" + pesquisaID + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagem + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                             try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
+                                writer.write("[" + timestamp + "] [ERROR] " + e.getMessage() + "\n");
+                                Slack.sendFormattedMessage("ERROR", e.getMessage());
+                            } catch (IOException | InterruptedException ex) {
                                 logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
                             }
                         }
 
-                        inserirLogNoBanco("INFO", nomeArquivo, "Sanitário Extraído", "Sanitário extraído com ID=" + pesquisaID);
+                        inserirLogNoBanco("INFO", nomeArquivo, "Sanitário Extraído", mensagem);
                     }
                 }
             }
@@ -1500,29 +1401,21 @@ public class ETL {
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                Slack.sendFormattedMessage("ERROR", "Erro ao processar arquivo Excel: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
-        logger.info("Dados de Sanitários extraídos com sucesso: {}", sanitariosExtraidos.size());
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de Sanitários concluída com sucesso. Total de sanitários extraídos: " + sanitariosExtraidos.size());
-
+        String mensagemSucesso = "Dados de Sanitários extraídos com sucesso: " + sanitariosExtraidos.size();
+        logger.info(mensagemSucesso);
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de Sanitários concluída com sucesso. Total de sanitários extraídos: " + sanitariosExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
 
         return sanitariosExtraidos;
@@ -1534,12 +1427,14 @@ public class ETL {
 
         try {
             writer.write("[" + timestamp + "] [INFO] Iniciando extração de dados de RestituicaoBagagens do arquivo: " + nomeArquivo + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
+            Slack.sendFormattedMessage("INFO", "Iniciando extração de dados de RestituicaoBagagens do arquivo: " + nomeArquivo);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
+                Slack.sendFormattedMessage("ERROR", "Erro ao escrever no arquivo de log: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro adicional ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
         }
         inserirLogNoBanco("INFO", nomeArquivo, "Início da Extração", "Iniciando extração de dados de RestituicaoBagagens do arquivo: " + nomeArquivo);
@@ -1570,16 +1465,13 @@ public class ETL {
                         restituicaoBagagensExtraidos.add(restituicaoBagagens);
 
                         // Log de sucesso para cada RestituicaoBagagens extraído
-                        inserirLogNoBanco("INFO", nomeArquivo, "RestituicaoBagagens Extraído", "RestituicaoBagagens extraído com ID=" + pesquisaID);
+                        String mensagem = "RestituicaoBagagens extraído com ID=" + pesquisaID;
+                        logger.info(mensagem);
+                        inserirLogNoBanco("INFO", nomeArquivo, "RestituicaoBagagens Extraído", mensagem);
                         try {
-                            writer.write("[" + timestamp + "] [INFO] RestituicaoBagagens extraído com ID=" + pesquisaID + "\n");
+                            writer.write("[" + timestamp + "] [INFO] " + mensagem + "\n");
                         } catch (IOException e) {
-                            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-                            try {
-                                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-                            } catch (IOException ex) {
-                                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-                            }
+                            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
                         }
                     }
                 }
@@ -1589,32 +1481,26 @@ public class ETL {
             inserirLogNoBanco("ERROR", nomeArquivo, "Erro ao Processar", "Erro ao processar arquivo Excel: " + e.getMessage());
             try {
                 writer.write("[" + timestamp + "] [ERROR] Erro ao processar arquivo Excel: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro ao escrever no arquivo de log: {}", ex.getMessage());
-                try {
-                    writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + ex.getMessage() + "\n");
-                } catch (IOException e2) {
-                    logger.error("Erro adicional ao escrever no arquivo de log: {}", e2.getMessage());
-                }
+                Slack.sendFormattedMessage("ERROR", "Erro ao processar arquivo Excel: " + e.getMessage());
+            } catch (IOException | InterruptedException ex) {
+                logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", ex.getMessage());
             }
             throw new RuntimeException("Erro ao processar arquivo Excel: " + e.getMessage());
         }
 
-        logger.info("Dados de RestituicaoBagagens extraídos com sucesso: {}", restituicaoBagagensExtraidos.size());
+        String mensagemSucesso = "Dados de RestituicaoBagagens extraídos com sucesso: " + restituicaoBagagensExtraidos.size();
+        logger.info(mensagemSucesso);
         try {
-            writer.write("[" + timestamp + "] [INFO] Extração de RestituicaoBagagens concluída com sucesso. Total de RestituicaoBagagens extraídos: " + restituicaoBagagensExtraidos.size() + "\n");
-        } catch (IOException e) {
-            logger.error("Erro ao escrever no arquivo de log: {}", e.getMessage());
-            try {
-                writer.write("[" + timestamp + "] [ERROR] Erro ao escrever no arquivo de log: " + e.getMessage() + "\n");
-            } catch (IOException ex) {
-                logger.error("Erro adicional ao escrever no arquivo de log: {}", ex.getMessage());
-            }
+            writer.write("[" + timestamp + "] [INFO] " + mensagemSucesso + "\n");
+            Slack.sendFormattedMessage("INFO", mensagemSucesso);
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erro ao escrever no arquivo de log ou enviar mensagem para o Slack: {}", e.getMessage());
         }
-        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", "Extração de RestituicaoBagagens concluída com sucesso. Total de RestituicaoBagagens extraídos: " + restituicaoBagagensExtraidos.size());
+        inserirLogNoBanco("INFO", nomeArquivo, "Extração Concluída", mensagemSucesso);
 
         return restituicaoBagagensExtraidos;
     }
+
 
     //INSERÇÃO NO BANCO DE DADOS
     public void inserirPesquisasNoBanco(List<PesquisaDeSatisfacao> pesquisas) {
