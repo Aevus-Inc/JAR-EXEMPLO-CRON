@@ -10,8 +10,9 @@ import java.util.Date;
 import org.json.JSONObject;
 
 public class Slack {
+    public static String URL = System.getenv("SLACK_WEBHOOK_URL");;
     private static final HttpClient client = HttpClient.newHttpClient();
-    private static final String URL = "https://hooks.slack.com/services/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";
+
 
     public static void sendMessage(JSONObject content) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder(

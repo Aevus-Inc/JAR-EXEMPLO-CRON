@@ -15,8 +15,15 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        String slackWebhookUrl = System.getenv("SLACK_WEBHOOK_URL");
+        if (slackWebhookUrl == null || slackWebhookUrl.isEmpty()) {
+            logger.error("A variável de ambiente SLACK_WEBHOOK_URL não está configurada.");
+            System.err.println("Erro: Variável de ambiente SLACK_WEBHOOK_URL não configurada. Encerrando o programa.");
+            return;
+        }
+        Slack.URL = slackWebhookUrl;
 
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         try (FileWriter writer = new FileWriter("log_erro_etl.txt", true)) {
             logger.info("Iniciando o processo de ETL...");
             try {
