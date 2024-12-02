@@ -27,7 +27,7 @@ import java.io.File;
 
 public class ETL {
     private static final Logger logger = LoggerFactory.getLogger(ETL.class);
-    private static final String BUCKET_NAME = "s3-bucket-aevusec2";
+    private static final String BUCKET_NAME = "s3-raw-lab-rsmlee";
 
     public void processarArquivosS3(List<String> arquivos, S3Client conexS3) {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -142,24 +142,6 @@ public class ETL {
         }
     }
 
-    public String getCellValueAsStringg(Cell cell) {
-        if (cell == null) {
-            return "";
-        }
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue()); // Converte para String
-            case BOOLEAN:
-                return String.valueOf(cell.getBooleanCellValue());
-            case FORMULA:
-                return cell.getCellFormula();
-            default:
-                return "";
-        }
-    }
-
     // Método auxiliar para obter o valor numérico da célula
     private Integer getNumericCellValue(Cell cell) {
         if (cell == null) {
@@ -206,19 +188,6 @@ public class ETL {
         return (int) cell.getNumericCellValue();
     }
 
-    private String getVooAsStringOrInteger(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue()); // Converte para String e remove decimais
-            default:
-                return null;
-        }
-    }
     public Integer obterAeroportoIdPorSigla(String sigla) {
         String sql = "SELECT idAeroporto FROM Aeroporto WHERE UPPER(siglaAeroporto) = UPPER(?)";
         JdbcTemplate jdbcTemplate = new ConexBanco().getConexaoBanco();
