@@ -190,7 +190,7 @@ public class ETL {
 
     public Integer obterAeroportoIdPorSigla(String sigla) {
         String sql = "SELECT idAeroporto FROM Aeroporto WHERE UPPER(siglaAeroporto) = UPPER(?)";
-        JdbcTemplate jdbcTemplate = new ConexBanco().getConexaoBanco();
+        JdbcTemplate jdbcTemplate = ConexBanco.getInstance().getConexaoBanco();
         logger.info("Consultando idAeroporto para a sigla: {}", sigla);
         try {
             return jdbcTemplate.queryForObject(sql, Integer.class, sigla);
@@ -1474,7 +1474,7 @@ public class ETL {
     //INSERÇÃO NO BANCO DE DADOS
     public void inserirPesquisasNoBanco(List<PesquisaDeSatisfacao> pesquisas) {
         logger.info("Inserindo pesquisas de satisfação no banco de dados. Total: {}", pesquisas.size());
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT IGNORE INTO PesquisaDeSatisfacao (Pesquisa_ID, Passageiro_ID, Aeroporto_idAeroporto, Mes, DataPesquisa, Satisfacao_Geral) VALUES (?, ?, ?, ?, STR_TO_DATE(?, '%d/%m/%Y'), ?)";
@@ -1528,7 +1528,7 @@ public class ETL {
 
     public void InserirAeroportosNoBanco(List<Aeroporto> aeroportos) {
         logger.info("Inserindo aeroportos no banco de dados. Total: {}", aeroportos.size());
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sqlInsert = "INSERT INTO Aeroporto (siglaAeroporto) VALUES (?)";
@@ -1583,7 +1583,7 @@ public class ETL {
 
     public void inserirPassageirosNoBanco(List<Passageiro> passageiros) {
         logger.info("Inserindo passageiros no banco de dados. Total: {}", passageiros.size());
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Passageiro (Nacionalidade, Genero, Faixa_Etaria, Escolaridade, Renda_Familiar, Viajando_Sozinho, Numero_Acompanhantes, Motivo_Viagem, Quantidade_Viagens_Ultimos_12_Meses, Ja_Embarcou_Desembarcou_Antes, Antecedencia, Tempo_Espera, Comentarios_Adicionais) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -1620,7 +1620,7 @@ public class ETL {
 
     public void inserirInformacoesVooNoBanco(List<InformacoesVoo> informacoesVoos) {
         logger.info("Inserindo informações de voo no banco de dados. Total: {}", informacoesVoos.size());
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Informacoes_Voo (Pesquisa_ID, Processo, Aeroporto, Terminal, Portao, Tipo_Voo, Cia_Aerea, Voo, Conexao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -1672,7 +1672,7 @@ public class ETL {
 
     public void InserirPassagemNoBanco(List<AquisicaoPassagem> aquisicoesPassagem) {
         logger.info("Inserindo aquisições de passagem no banco de dados. Total: {}", aquisicoesPassagem.size());
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Aquisição_Passagem (Pesquisa_ID, Aquisição_Passagem, Meio_Aquisição_Passagem, Meio_Transporte_Aeroporto) VALUES (?, ?, ?, ?)";
@@ -1716,7 +1716,7 @@ public class ETL {
 
     public void inserirNecessidadesEspeciaisNoBanco(List<NecessidadesEspeciais> necessidadesEspeciais) {
         logger.info("Inserindo necessidades especiais no banco de dados. Total: {}", necessidadesEspeciais.size());
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String insertSql = "INSERT INTO Necessidades_Especiais (Pesquisa_ID, Possui_Deficiencia, Utiliza_Recurso_Assistivo, Solicitou_Assistencia_Especial) VALUES (?, ?, ?, ?)";
@@ -1761,7 +1761,7 @@ public class ETL {
 
     public void inserirDesembarqueNoBanco(List<Desembarque> desembarques) {
         logger.info("Inserindo necessidades especiais no banco de dados. Total: {}", desembarques.size());
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String insertSql = "INSERT INTO Desembarque (Pesquisa_ID, Forma_Desembarque, Avaliacao_Metodo_Desembarque, Utilizou_Estacionamento, Facilidade_Desembarque_Meio_Fio, Opcoes_Transporte_Aeroporto) VALUES (?, ?, ?, ?, ?, ?)";
@@ -1809,7 +1809,7 @@ public class ETL {
 
     public void InserirCheckInBanco(List<CheckIn> checkIns) {
         logger.info("Inserindo check-ins no banco de dados. Total: {}", checkIns.size());
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Check_in (Pesquisa_ID, Forma_Check_in, Processo_Check_in, Tempo_Espera_Fila, Organizacao_Filas, Quantidade_Totens_AA, Quantidade_Balcoes, Cordialidade_Funcionarios, Tempo_Atendimento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -1865,7 +1865,7 @@ public class ETL {
     public void inserirInspecaoSegurancaNoBanco(List<InspecaoSeguranca> inspecaoSegurancas) {
         logger.info("Inserindo registros de inspeção de segurança no banco de dados. Total: {}", inspecaoSegurancas.size());
 
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Inspecao_Seguranca (Pesquisa_ID, Processo_Inspecao_Seguranca, Tempo_Espera_Fila, Organizacao_Filas, Atendimento_Funcionarios) VALUES (?, ?, ?, ?, ?)";
@@ -1913,7 +1913,7 @@ public class ETL {
     public void inserirControleMigratorioAduaneiro(List<ControleMigratorioAduaneiro> controleMigratorioAduaneiros) {
         logger.info("Inserindo registros de controle migratório aduaneiro no banco de dados. Total: {}", controleMigratorioAduaneiros.size());
 
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Controle_Migratorio_Aduaneiro (Pesquisa_ID, Controle_Migratorio, Tempo_Espera_Fila, Organizacao_Filas, Atendimento_Funcionarios, Quantidade_Guiches, Controle_Aduaneiro) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -1968,7 +1968,7 @@ public class ETL {
     public void inserirEstabelecimentosNoBanco(List<Estabelecimentos> estabelecimentos) {
         logger.info("Inserindo registros de estabelecimentos no banco de dados. Total: {}", estabelecimentos.size());
 
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Estabelecimentos (Pesquisa_ID, Estabelecimentos_Alimentacao, Quantidade_Estabelecimentos_Alimentacao, Qualidade_Variedade_Opcoes_Alimentacao, Relacao_Preco_Qualidade_Alimentacao, Estabelecimentos_Comerciais, Quantidade_Estabelecimentos_Comerciais, Qualidade_Variedade_Opcoes_Comerciais) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -2022,7 +2022,7 @@ public class ETL {
     public void inserirEstacionamentoNoBanco(List<Estacionamento> estacionamentos) {
         logger.info("Inserindo registros de estacionamento no banco de dados. Total: {}", estacionamentos.size());
 
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Estacionamento (Pesquisa_ID, Qualidade_Instalacoes_Estacionamento, Facilidade_Encontrar_Vagas, Facilidade_Acesso_Terminal, Relacao_Preco_Qualidade) VALUES (?, ?, ?, ?, ?)";
@@ -2070,7 +2070,7 @@ public class ETL {
     public void inserirConfortoAcessibilidade(List<ConfortoAcessibilidade> confortoAcessibilidades) {
         logger.info("Inserindo registros de conforto e acessibilidade no banco de dados. Total: {}", confortoAcessibilidades.size());
 
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Conforto_Acessibilidade (Pesquisa_ID, Localizacao_Deslocamento, Sinalizacao, Disponibilidade_Paineis_Informacoes_Voo, Acessibilidade_Terminal, Conforto_Sala_Embarque, Conforto_Termico, Conforto_Acustico, Disponibilidade_Assentos, Disponibilidade_Assentos_Reservados, Disponibilidade_Tomadas, Internet_Disponibilizada_Aeroporto, Velocidade_Conexao, Facilidade_Acesso_Rede) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -2136,7 +2136,7 @@ public class ETL {
     public void inserirDadosSanitarios(List<Sanitarios> sanitarios) {
         logger.info("Inserindo registros de sanitários no banco de dados. Total: {}", sanitarios.size());
 
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Sanitarios (Pesquisa_ID, Quantidade_Banheiros, Limpeza_Banheiros, Manutencao_Geral_Sanitarios, Limpeza_Geral_Aeroporto) VALUES (?, ?, ?, ?, ?)";
@@ -2184,7 +2184,7 @@ public class ETL {
     public void inserirDadosBagagens(List<RestituicaoBagagens> restituicaoBagagens) {
         logger.info("Inserindo registros de restituição de bagagens no banco de dados. Total: {}", restituicaoBagagens.size());
 
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO Restituicao_Bagagens (Pesquisa_ID, Processo_Restituicao_Bagagens, Facilidade_Identificacao_Esteira, Tempo_Restituicao, Integridade_Bagagem, Atendimento_Cia_Aerea) VALUES (?, ?, ?, ?, ?, ?)";
@@ -2232,7 +2232,7 @@ public class ETL {
     }
 
     public void inserirLogNoBanco(String status, String arquivoLido, String titulo, String descricao) {
-        ConexBanco conectar = new ConexBanco();
+        ConexBanco conectar = ConexBanco.getInstance();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
         String sql = "INSERT INTO log (status, arquivo_lido, titulo, descricao) VALUES (?, ?, ?, ?)";

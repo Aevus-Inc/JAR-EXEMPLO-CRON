@@ -4,9 +4,12 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 public class ConexBanco {
+
+    private static ConexBanco instance;
+
     private JdbcTemplate conexBanco;
 
-    public ConexBanco() {
+    private ConexBanco() {
         BasicDataSource configBanco = new BasicDataSource();
 
         // Configurações da conexão com MySQL
@@ -33,8 +36,16 @@ public class ConexBanco {
         this.conexBanco = new JdbcTemplate(configBanco);
     }
 
+    public static ConexBanco getInstance() {
+        if (instance == null) {
+            instance = new ConexBanco();
+        }
+
+        return instance;
+    }
+
     // Retorna o JdbcTemplate configurado
     public JdbcTemplate getConexaoBanco() {
-        return conexBanco;
+        return this.conexBanco;
     }
 }
