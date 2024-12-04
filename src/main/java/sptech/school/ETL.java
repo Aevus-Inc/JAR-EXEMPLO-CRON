@@ -2139,7 +2139,7 @@ public class ETL {
         ConexBanco conectar = new ConexBanco();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
-        String sql = "INSERT INTO Sanitarios (Pesquisa_ID, sanitariosQt, Quantidade_Banheiros, Limpeza_Banheiros, Manutencao_Geral_Sanitarios, Limpeza_Geral_Aeroporto) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Sanitarios (Pesquisa_ID, Quantidade_Banheiros, Limpeza_Banheiros, Manutencao_Geral_Sanitarios, Limpeza_Geral_Aeroporto) VALUES (?, ?, ?, ?, ?)";
 
         int batchSize = 2000;
         List<Object[]> parametrosBatch = new ArrayList<>();
