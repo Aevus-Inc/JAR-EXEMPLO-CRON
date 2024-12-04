@@ -46,7 +46,7 @@ public class Main {
                 writer.write("[" + timestamp + "] [INFO] Processo de ETL finalizado.\n");
                 Slack.sendFormattedMessage("INFO", "Processo de ETL finalizado.");
             } catch (Exception e) {
-                logger.error("Erro durante o processo de ETL: {}", e.getMessage());
+                logger.error("Erro durante o processo de ETL: ", e);
                 try {
                     String errorMessage = "[" + timestamp + "] [ERROR] Erro durante o processo de ETL: " + e.getMessage();
                     writer.write(errorMessage + "\n");
