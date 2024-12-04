@@ -256,7 +256,7 @@ public class ETL {
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && aeroportosExtraidos.size() < limiteDeLinhas; i++) {
@@ -335,18 +335,18 @@ public class ETL {
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && passageirosExtraidos.size() < limiteDeLinhas; i++) {
                 Row row = sheet.getRow(i);
                 if (row != null) {
                     try {
-                        String nacionalidade = row.getCell(85).getStringCellValue();
-                        String genero = row.getCell(86).getStringCellValue();
-                        String faixaEtaria = row.getCell(87).getStringCellValue();
-                        String escolaridade = row.getCell(88).getStringCellValue();
-                        String rendaFamiliar = row.getCell(89).getStringCellValue();
+                        String nacionalidade = getCellValueAsString(row.getCell(85));
+                        String genero = getCellValueAsString(row.getCell(86));
+                        String faixaEtaria = getCellValueAsString(row.getCell(87));
+                        String escolaridade = getCellValueAsString(row.getCell(88));
+                        String rendaFamiliar = getCellValueAsString(row.getCell(89));
 
                         String viajandoSozinho = getCellValueAsString(row.getCell(90));
                         String numeroAcompanhantes = getCellValueAsString(row.getCell(91));
@@ -444,7 +444,7 @@ public class ETL {
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && pesquisasExtraidas.size() < limiteDeLinhas; i++) {
@@ -527,7 +527,7 @@ public class ETL {
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && informacoesVoosExtraidas.size() < limiteDeLinhas; i++) {
@@ -540,7 +540,7 @@ public class ETL {
                         String terminal = getCellValueAsString(row.getCell(7));
                         String portao = getCellValueAsString(row.getCell(8));
                         String tipoVoo = getCellValueAsString(row.getCell(9));
-                        String ciaAerea = getCellValueAsString(row.getCell(10));
+                        String ciaAerea = getCellValueAsString(row.getCell(100));
                         String voo = getCellValueAsString(row.getCell(11));
                         String conexao = getCellValueAsString(row.getCell(12));
 
@@ -617,7 +617,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0); // Altere o índice se necessário
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && aquisicoesExtraidas.size() < limiteDeLinhas; i++) {
@@ -706,7 +706,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && necessidadesEspeciaisExtraidos.size() < limiteDeLinhas; i++) {
@@ -784,7 +784,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && desembarquesExtraidos.size() < limiteDeLinhas; i++) {
@@ -796,7 +796,7 @@ public class ETL {
 
                         // Verificando campos e tratando como nulos
                         String formaDesembarque = getCellValueAsString(linha.getCell(19));
-                        Integer avaliacaoMetodoDesembarque = getNumericCellValue(linha.getCell(20));
+                        Integer avaliacaoMetodoDesembarque = getNumericCellValue(linha.getCell(100));
                         String utilizouEstacionamento = getBooleanValueFromCell(linha.getCell(21));
                         Integer facilidadeDesembarqueMeioFio = getNumericCellValue(linha.getCell(22));
                         Integer opcoesTransporteAeroporto = getNumericCellValue(linha.getCell(23));
@@ -878,7 +878,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && checkInsExtraidos.size() < limiteDeLinhas; i++) {
@@ -960,7 +960,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && inspecaoSegurancasExtraidos.size() < limiteDeLinhas; i++) {
@@ -1036,7 +1036,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && controleMigratorioAduaneirosExtraidos.size() < limiteDeLinhas; i++) {
@@ -1113,7 +1113,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && estabelecimentosExtraidos.size() < limiteDeLinhas; i++) {
@@ -1187,7 +1187,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && estacionamentoExtraidos.size() < limiteDeLinhas; i++) {
@@ -1262,7 +1262,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && confortoAcessibilidadesExtraidos.size() < limiteDeLinhas; i++) {
@@ -1357,7 +1357,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && sanitariosExtraidos.size() < limiteDeLinhas; i++) {
@@ -1443,7 +1443,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 10;
+            int limiteDeLinhas = 100;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && restituicaoBagagensExtraidos.size() < limiteDeLinhas; i++) {
@@ -1510,7 +1510,7 @@ public class ETL {
 
         String sql = "INSERT IGNORE INTO PesquisaDeSatisfacao (Pesquisa_ID, Passageiro_ID, Aeroporto_idAeroporto, Mes, DataPesquisa, Satisfacao_Geral) VALUES (?, ?, ?, ?, STR_TO_DATE(?, '%d/%m/%Y'), ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -1567,7 +1567,7 @@ public class ETL {
 
         Set<String> aeroportosInseridos = new HashSet<>();
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -1656,7 +1656,7 @@ public class ETL {
 
         String sql = "INSERT INTO Informacoes_Voo (Pesquisa_ID, Processo, Aeroporto, Terminal, Portao, Tipo_Voo, Cia_Aerea, Voo, Conexao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        int batchSize = 2000; // Ajuste o tamanho do lote conforme necessário
+        int batchSize = 500; // Ajuste o tamanho do lote conforme necessário
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -1708,7 +1708,7 @@ public class ETL {
 
         String sql = "INSERT INTO Aquisição_Passagem (Pesquisa_ID, Aquisição_Passagem, Meio_Aquisição_Passagem, Meio_Transporte_Aeroporto) VALUES (?, ?, ?, ?)";
 
-        int batchSize = 2000; // Lote de 500 itens (ajuste conforme necessário)
+        int batchSize = 500; // Lote de 500 itens (ajuste conforme necessário)
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -1752,7 +1752,7 @@ public class ETL {
 
         String insertSql = "INSERT INTO Necessidades_Especiais (Pesquisa_ID, Possui_Deficiencia, Utiliza_Recurso_Assistivo, Solicitou_Assistencia_Especial) VALUES (?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -1797,7 +1797,7 @@ public class ETL {
 
         String insertSql = "INSERT INTO Desembarque (Pesquisa_ID, Forma_Desembarque, Avaliacao_Metodo_Desembarque, Utilizou_Estacionamento, Facilidade_Desembarque_Meio_Fio, Opcoes_Transporte_Aeroporto) VALUES (?, ?, ?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -1845,7 +1845,7 @@ public class ETL {
 
         String sql = "INSERT INTO Check_in (Pesquisa_ID, Forma_Check_in, Processo_Check_in, Tempo_Espera_Fila, Organizacao_Filas, Quantidade_Totens_AA, Quantidade_Balcoes, Cordialidade_Funcionarios, Tempo_Atendimento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -1901,7 +1901,7 @@ public class ETL {
 
         String sql = "INSERT INTO Inspecao_Seguranca (Pesquisa_ID, Processo_Inspecao_Seguranca, Tempo_Espera_Fila, Organizacao_Filas, Atendimento_Funcionarios) VALUES (?, ?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -1949,7 +1949,7 @@ public class ETL {
 
         String sql = "INSERT INTO Controle_Migratorio_Aduaneiro (Pesquisa_ID, Controle_Migratorio, Tempo_Espera_Fila, Organizacao_Filas, Atendimento_Funcionarios, Quantidade_Guiches, Controle_Aduaneiro) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -2004,7 +2004,7 @@ public class ETL {
 
         String sql = "INSERT INTO Estabelecimentos (Pesquisa_ID, Estabelecimentos_Alimentacao, Quantidade_Estabelecimentos_Alimentacao, Qualidade_Variedade_Opcoes_Alimentacao, Relacao_Preco_Qualidade_Alimentacao, Estabelecimentos_Comerciais, Quantidade_Estabelecimentos_Comerciais, Qualidade_Variedade_Opcoes_Comerciais) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -2058,7 +2058,7 @@ public class ETL {
 
         String sql = "INSERT INTO Estacionamento (Pesquisa_ID, Qualidade_Instalacoes_Estacionamento, Facilidade_Encontrar_Vagas, Facilidade_Acesso_Terminal, Relacao_Preco_Qualidade) VALUES (?, ?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -2106,7 +2106,7 @@ public class ETL {
 
         String sql = "INSERT INTO Conforto_Acessibilidade (Pesquisa_ID, Localizacao_Deslocamento, Sinalizacao, Disponibilidade_Paineis_Informacoes_Voo, Acessibilidade_Terminal, Conforto_Sala_Embarque, Conforto_Termico, Conforto_Acustico, Disponibilidade_Assentos, Disponibilidade_Assentos_Reservados, Disponibilidade_Tomadas, Internet_Disponibilizada_Aeroporto, Velocidade_Conexao, Facilidade_Acesso_Rede) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -2170,9 +2170,9 @@ public class ETL {
         ConexBanco conectar = new ConexBanco();
         JdbcTemplate conec = conectar.getConexaoBanco();
 
-        String sql = "INSERT INTO Sanitarios (Pesquisa_ID, sanitariosQt, Quantidade_Banheiros, Limpeza_Banheiros, Manutencao_Geral_Sanitarios, Limpeza_Geral_Aeroporto) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Sanitarios (Pesquisa_ID, Quantidade_Banheiros, Limpeza_Banheiros, Manutencao_Geral_Sanitarios, Limpeza_Geral_Aeroporto) VALUES (?, ?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
@@ -2180,7 +2180,6 @@ public class ETL {
             for (Sanitarios sanitario : sanitarios) {
                 Object[] parametros = {
                         sanitario.getPesquisaID(),
-                        sanitario.getSanitarios(),
                         sanitario.getQuantidadeBanheiros(),
                         sanitario.getLimpezaBanheiros(),
                         sanitario.getManutencaoGeralSanitarios(),
@@ -2188,9 +2187,8 @@ public class ETL {
                 };
 
                 // Log detalhado de cada registro
-                logger.info("Inserindo: Pesquisa_ID={}, sanitariosQt={}, Quantidade_Banheiros={}, Limpeza_Banheiros={}, Manutencao_Geral_Sanitarios={}, Limpeza_Geral_Aeroporto={}",
+                logger.info("Inserindo: Pesquisa_ID={}, Quantidade_Banheiros={}, Limpeza_Banheiros={}, Manutencao_Geral_Sanitarios={}, Limpeza_Geral_Aeroporto={}",
                         sanitario.getPesquisaID(),
-                        sanitario.getSanitarios(),
                         sanitario.getQuantidadeBanheiros(),
                         sanitario.getLimpezaBanheiros(),
                         sanitario.getManutencaoGeralSanitarios(),
@@ -2222,7 +2220,7 @@ public class ETL {
 
         String sql = "INSERT INTO Restituicao_Bagagens (Pesquisa_ID, Processo_Restituicao_Bagagens, Facilidade_Identificacao_Esteira, Tempo_Restituicao, Integridade_Bagagem, Atendimento_Cia_Aerea) VALUES (?, ?, ?, ?, ?, ?)";
 
-        int batchSize = 2000;
+        int batchSize = 500;
         List<Object[]> parametrosBatch = new ArrayList<>();
         int count = 0;
 
