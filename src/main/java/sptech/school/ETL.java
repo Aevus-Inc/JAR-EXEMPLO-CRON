@@ -142,24 +142,6 @@ public class ETL {
         }
     }
 
-    public String getCellValueAsStringg(Cell cell) {
-        if (cell == null) {
-            return "";
-        }
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue()); // Converte para String
-            case BOOLEAN:
-                return String.valueOf(cell.getBooleanCellValue());
-            case FORMULA:
-                return cell.getCellFormula();
-            default:
-                return "";
-        }
-    }
-
     // Método auxiliar para obter o valor numérico da célula
     private Integer getNumericCellValue(Cell cell) {
         if (cell == null) {
@@ -206,19 +188,6 @@ public class ETL {
         return (int) cell.getNumericCellValue();
     }
 
-    private String getVooAsStringOrInteger(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue()); // Converte para String e remove decimais
-            default:
-                return null;
-        }
-    }
     public Integer obterAeroportoIdPorSigla(String sigla) {
         String sql = "SELECT idAeroporto FROM Aeroporto WHERE UPPER(siglaAeroporto) = UPPER(?)";
         JdbcTemplate jdbcTemplate = new ConexBanco().getConexaoBanco();
@@ -719,7 +688,7 @@ public class ETL {
                         // Verificando campos e tratando como nulos
                         String possuiDeficiencia = getCellValueAsString(linha.getCell(16));
                         String utilizaRecursoAssistivo = getCellValueAsString(linha.getCell(17));
-                        String solicitouAssistenciaEspecial = getCellValueAsString(linha.getCell(18));
+                        String solicitouAssistenciaEspecial = getCellValueAsString(linha.getCell(10));
 
                         // Cria a NecessidadesEspeciais independentemente de campos nulos
                         NecessidadesEspeciais necessidadesEspeciais = new NecessidadesEspeciais(pesquisaID, possuiDeficiencia, utilizaRecursoAssistivo, solicitouAssistenciaEspecial);
