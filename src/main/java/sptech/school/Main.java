@@ -38,7 +38,7 @@ public class Main {
             ETL etlAevus = new ETL();
             S3Client conexS3 = new S3Provider().getS3Client();
 
-            List<String> arquivos = Arrays.asList("2023-01tri.xlsx", "2023-02tri.xlsx", "2023-03tri.xlsx", "2023-04tri.xlsx", "2024-01tri.xlsx", "2024-02tri.xlsx");
+            List<String> arquivos = Arrays.asList("2024-02tri.xlsx");
 
             try {
                 etlAevus.processarArquivosS3(arquivos, conexS3);
