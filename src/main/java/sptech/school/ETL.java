@@ -27,14 +27,24 @@ import java.io.File;
 
 public class ETL {
     private static final Logger logger = LoggerFactory.getLogger(ETL.class);
-    private static final String BUCKET_NAME = "s3-bucket-aevusec2";
+    private static final String BUCKET_NAME = "s3-aevus";
 
     public void processarArquivosS3(List<String> arquivos, S3Client conexS3) {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String logFileName = "etl-process-log_" + timestamp + ".txt";
 
-        try (FileWriter writer = new FileWriter(logFileName)) {  // Abre o FileWriter em modo de apêndice
+        try (FileWriter writer = new FileWriter(logFileName)) {
+            ConexBanco conexBanco = ConexBanco.getInstance();
+
             for (String arquivo : arquivos) {
+                if(conexBanco.arquivoJaProcessado(arquivo)){
+                    logger.info("O arquivo {} ja foi processado anteriormente. Pulando.", arquivo);
+                    writer.write("[" + timestamp + "] [INFO] O arquivo " + arquivo + " já foi processado anteriormente. Pulando.\n");
+                    JSONObject message = Slack.createFormattedMessage("INFO", "O arquivo " + arquivo + " já foi processado anteriormente. Pulando.", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+                    Slack.sendMessage(message);
+
+                    continue;
+                }
                 String logTimestamp  = null;
                 try {
                     logTimestamp  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
@@ -79,6 +89,8 @@ public class ETL {
                             processo.accept(stream);
                         }
                     }
+
+                    conexBanco.registrarArquivoProcessado(arquivo);
                     writer.write("[" + timestamp + "] [INFO] Arquivo processado com sucesso: " + arquivo + "\n");
                     logger.info("Arquivo processado com sucesso: {}", arquivo);
                     inserirLogNoBanco("INFO", arquivo, "Processamento do arquivo", "Arquivo processado com sucesso");
@@ -225,7 +237,7 @@ public class ETL {
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && aeroportosExtraidos.size() < limiteDeLinhas; i++) {
@@ -304,7 +316,7 @@ public class ETL {
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && passageirosExtraidos.size() < limiteDeLinhas; i++) {
@@ -413,7 +425,7 @@ public class ETL {
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && pesquisasExtraidas.size() < limiteDeLinhas; i++) {
@@ -496,7 +508,7 @@ public class ETL {
 
         try (Workbook workbook = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = workbook.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && informacoesVoosExtraidas.size() < limiteDeLinhas; i++) {
@@ -586,7 +598,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0); // Altere o índice se necessário
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && aquisicoesExtraidas.size() < limiteDeLinhas; i++) {
@@ -675,7 +687,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && necessidadesEspeciaisExtraidos.size() < limiteDeLinhas; i++) {
@@ -753,7 +765,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && desembarquesExtraidos.size() < limiteDeLinhas; i++) {
@@ -847,7 +859,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && checkInsExtraidos.size() < limiteDeLinhas; i++) {
@@ -929,7 +941,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && inspecaoSegurancasExtraidos.size() < limiteDeLinhas; i++) {
@@ -1005,7 +1017,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && controleMigratorioAduaneirosExtraidos.size() < limiteDeLinhas; i++) {
@@ -1082,7 +1094,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && estabelecimentosExtraidos.size() < limiteDeLinhas; i++) {
@@ -1156,7 +1168,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && estacionamentoExtraidos.size() < limiteDeLinhas; i++) {
@@ -1231,7 +1243,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && confortoAcessibilidadesExtraidos.size() < limiteDeLinhas; i++) {
@@ -1326,7 +1338,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && sanitariosExtraidos.size() < limiteDeLinhas; i++) {
@@ -1412,7 +1424,7 @@ public class ETL {
 
         try (Workbook arquivoExcel = nomeArquivo.endsWith(".xlsx") ? new XSSFWorkbook(arquivo) : new HSSFWorkbook(arquivo)) {
             Sheet sheet = arquivoExcel.getSheetAt(0);
-            int limiteDeLinhas = 2500;
+            int limiteDeLinhas = 10;
             int linhaInicial = determinarLinhaInicial(nomeArquivo);
 
             for (int i = linhaInicial; i <= sheet.getLastRowNum() && restituicaoBagagensExtraidos.size() < limiteDeLinhas; i++) {
